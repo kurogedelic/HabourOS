@@ -1,0 +1,7 @@
+.DS_Store
+target/
+
+# Runtime VFS and host exchange directories.
+harbour_vfs.yaml
+harbour_import/
+harbour_export/

@@ -1,0 +1,17 @@
+[package]
+name = "harbour_shell"
+version = "0.1.0"
+edition = "2021"
+authors = ["kurogedelic"]
+description = "Harbour OS - A retro virtual OS"
+default-run = "harbour_shell"
+
+[dependencies]
+sdl2 = { version = "0.38", features = ["use-pkgconfig", "image"] }
+chrono = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+
+[profile.release]
+opt-level = 2
+lto = true

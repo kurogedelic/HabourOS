@@ -1,0 +1,13 @@
+name: default
+
+# Harbour UI 方針: 4色パレット。
+# まずは amber の 4-step gradient として、背景から高輝度文字までを
+# palette[0]..palette[3] に集約する。既存の foreground / muted などの
+# 意味名はコード側でこの palette にマップされる。
+
+colors:
+  palette:
+    - "#000000"   # 0: background
+    - "#3a2108"   # 1: shadow / deepest amber
+    - "#9a5a12"   # 2: muted / mid amber
+    - "#ffb040"   # 3: foreground / bright amber
