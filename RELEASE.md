@@ -16,7 +16,7 @@ Harbour OS 0.1 is a small retro virtual desktop, not a general-purpose operating
 - Files can create, rename, delete, import, and export text files/folders.
 - Clock, Dictionary, Calculator, and Snake are reachable and return to the desktop.
 - Runtime files are kept out of Git: `harbour_vfs.yaml`, `harbour_import/`, and `harbour_export/`.
-- A release bundle can be produced with `./tools/package_release.sh`.
+- A release bundle can be produced with `bash tools/package_release.sh`.
 
 ## Manual smoke test
 
@@ -43,7 +43,7 @@ Inside Harbour OS:
 ## Packaging
 
 ```bash
-./tools/package_release.sh
+bash tools/package_release.sh
 ```
 
 The generated bundle is written to:
