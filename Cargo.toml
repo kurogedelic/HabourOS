@@ -7,10 +7,16 @@ description = "Harbour OS - A retro virtual OS"
 default-run = "harbour_shell"
 
 [dependencies]
-sdl2 = { version = "0.38", features = ["use-pkgconfig", "image"] }
 chrono = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
+
+[target.'cfg(not(target_os = "emscripten"))'.dependencies]
+sdl2 = { version = "0.38", features = ["use-pkgconfig", "image"] }
+
+# Web build: SDL2 / SDL2_image come from Emscripten ports (see web/build.sh).
+[target.'cfg(target_os = "emscripten")'.dependencies]
+sdl2 = { version = "0.38", features = ["image"] }
 
 [profile.release]
 opt-level = 2

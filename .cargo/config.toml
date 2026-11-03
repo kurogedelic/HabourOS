@@ -1,0 +1,13 @@
+[target.wasm32-unknown-emscripten]
+rustflags = [
+    "-C", "link-arg=-sUSE_SDL=2",
+    "-C", "link-arg=-sUSE_SDL_IMAGE=2",
+    "-C", "link-arg=-sSDL2_IMAGE_FORMATS=[\"png\"]",
+    "-C", "link-arg=-sASYNCIFY",
+    "-C", "link-arg=-sALLOW_MEMORY_GROWTH=1",
+    "-C", "link-arg=-sEXPORTED_RUNTIME_METHODS=[\"FS\",\"ENV\",\"addRunDependency\",\"removeRunDependency\"]",
+    "-C", "link-arg=-lidbfs.js",
+    "-C", "link-arg=-sMODULARIZE=0",
+    "-C", "link-arg=--preload-file=assets",
+    "-C", "link-arg=--preload-file=fonts/mplus_j12r.bdf",
+]

@@ -52,6 +52,25 @@ is intentionally restrained:
 
 The default theme lives at `assets/themes/default.yaml`.
 
+## Web (WebAssembly) Build
+
+`web/` contains a browser build. The Rust shell is compiled with Emscripten
+(`wasm32-unknown-emscripten`, SDL2 / SDL2_image ports) and its screen is shown
+on a Three.js 3D enclosure with a clickable QWERTY keyboard. The page is laid
+out for iPad landscape (1024x768) and fits the enclosure to other sizes.
+
+```bash
+rustup target add wasm32-unknown-emscripten   # once; also needs emcc
+./web/build.sh
+python3 -m http.server 8080 --directory web
+```
+
+- Physical keyboard input goes straight to SDL; the 3D keys mirror it.
+- 3D `Shift` / `Ctrl` are sticky and release after the next key.
+- Click or drag on the 3D screen to use the pointer.
+- The VFS snapshot is stored in IndexedDB (`/persist/harbour_vfs.yaml`).
+- `?w=800&h=320` changes the OS resolution (default 640x320, a wide 2:1 screen).
+
 ## Virtual Filesystem
 
 The VFS is an in-memory Unix-style tree persisted as a YAML snapshot. By default,

@@ -1,0 +1,4 @@
+# build.sh が生成する Emscripten 出力
+harbour_shell.js
+harbour_shell.wasm
+harbour_shell.data

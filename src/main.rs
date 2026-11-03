@@ -59,6 +59,9 @@ enum Mode {
 fn main() -> Result<(), String> {
     // HarbourOS is pixel art only. Never allow texture interpolation.
     let _ = sdl2::hint::set("SDL_RENDER_SCALE_QUALITY", "0");
+    // Web: 2D canvas に描画し、ページ側 (web/) が筐体スクリーンのテクスチャとして読む。
+    #[cfg(target_os = "emscripten")]
+    let _ = sdl2::hint::set("SDL_RENDER_DRIVER", "software");
     sdl2::image::init(sdl2::image::InitFlag::PNG)?;
     let sdl = sdl2::init()?;
     sdl.mouse().show_cursor(false);
@@ -756,7 +759,7 @@ fn main() -> Result<(), String> {
 
         canvas.present();
         sdl.mouse().show_cursor(false);
-        std::thread::sleep(std::time::Duration::from_millis(16));
+        frame_wait();
     }
 
     Ok(())
@@ -1059,6 +1062,20 @@ fn draw_pointer(
 fn is_ctrl_q(key: Keycode, keymod: Mod) -> bool {
     key == Keycode::Q
         && (keymod & Mod::LCTRLMOD != Mod::NOMOD || keymod & Mod::RCTRLMOD != Mod::NOMOD)
+}
+
+#[cfg(not(target_os = "emscripten"))]
+fn frame_wait() {
+    std::thread::sleep(std::time::Duration::from_millis(16));
+}
+
+/// Web: ASYNCIFY でブラウザへ制御を返す（ブロックするとタブが固まる）。
+#[cfg(target_os = "emscripten")]
+fn frame_wait() {
+    extern "C" {
+        fn emscripten_sleep(ms: u32);
+    }
+    unsafe { emscripten_sleep(16) };
 }
 
 fn env_u32(name: &str) -> Option<u32> {
