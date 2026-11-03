@@ -59,6 +59,9 @@ The default theme lives at `assets/themes/default.yaml`.
 on a Three.js 3D enclosure with a clickable QWERTY keyboard. The page is laid
 out for iPad landscape (1024x768) and fits the enclosure to other sizes.
 
+Live: https://kurogedelic.github.io/HabourOS/ (deployed from `main` by
+`.github/workflows/pages.yml`).
+
 ```bash
 rustup target add wasm32-unknown-emscripten   # once; also needs emcc
 ./web/build.sh
