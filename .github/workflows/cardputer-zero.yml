@@ -1,0 +1,37 @@
+name: Cardputer Zero ARM64 (experimental)
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-cardputer-zero:
+    runs-on: ubuntu-24.04-arm
+    container: rust:1-bookworm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SDL2 build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            pkg-config libsdl2-dev libsdl2-image-dev ca-certificates
+
+      - name: Build release (Linux aarch64, glibc bookworm)
+        run: cargo build --locked --release --bin harbour_shell
+
+      - name: Make portable bundle
+        run: |
+          mkdir -p dist/cardputer-zero
+          cp target/release/harbour_shell dist/cardputer-zero/
+          cp run-cardputer-zero.sh dist/cardputer-zero/
+          cp -a assets fonts dist/cardputer-zero/
+          chmod +x dist/cardputer-zero/run-cardputer-zero.sh
+          tar -czf dist/harbour-os-cardputer-zero-aarch64.tar.gz -C dist/cardputer-zero .
+
+      - name: Upload test bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: harbour-os-cardputer-zero-aarch64
+          path: dist/harbour-os-cardputer-zero-aarch64.tar.gz
