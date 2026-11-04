@@ -279,7 +279,10 @@ fn main() -> Result<(), String> {
                                 let (out_w, out_h) = canvas
                                     .output_size()
                                     .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
-                                desktop.set_view(out_w, out_h.saturating_sub(TOPBAR_H as u32));
+                                desktop.set_view(
+                                    out_w,
+                                    out_h.saturating_sub(topbar_height(out_w, out_h) as u32),
+                                );
                                 let from = icon_rect(&desktop, desktop.selected, out_w, TOPBAR_H);
                                 let to = app_window_rect(&canvas);
                                 mode = Mode::Opening {
@@ -549,7 +552,10 @@ fn main() -> Result<(), String> {
             .output_size()
             .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
         os.clamp_pointer(out_w, out_h);
-        desktop.set_view(out_w, out_h.saturating_sub(TOPBAR_H as u32));
+        desktop.set_view(
+            out_w,
+            out_h.saturating_sub(topbar_height(out_w, out_h) as u32),
+        );
         let bg = tm.get_color("background");
         canvas.set_draw_color(Color::RGB(bg.r, bg.g, bg.b));
         canvas.clear();
@@ -815,9 +821,18 @@ fn handle_pointer_input(
             let (out_w, out_h) = canvas
                 .output_size()
                 .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
-            desktop.set_view(out_w, out_h.saturating_sub(TOPBAR_H as u32));
+            desktop.set_view(
+                out_w,
+                out_h.saturating_sub(topbar_height(out_w, out_h) as u32),
+            );
             if let DesktopAction::Launch(kind) =
-                desktop.handle_pointer(input, FRAME_MARGIN, TOPBAR_H, out_w, out_h)
+                desktop.handle_pointer(
+                    input,
+                    FRAME_MARGIN,
+                    topbar_height(out_w, out_h),
+                    out_w,
+                    out_h,
+                )
             {
                 *mode = opening_from_desktop(canvas, desktop, kind);
             }
@@ -893,30 +908,33 @@ fn app_close_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
     Rect::new(rect.x() + 4, rect.y() + 3, 10, 10)
 }
 
-/// アイコンの画面上の矩形（アニメ起点）。簡易: グリッド位置から計算。
+/// Start/end rectangle for app open/close transitions.
+/// Matches Desktop::layout for both the compact and the PC view.
 fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rect {
     if screen_w <= 360 {
-        // Match the index row rather than animating from an obsolete icon grid.
-        return Rect::new(FRAME_MARGIN + 4, topbar_h + 22 + idx as i32 * 18, 133, 17);
+        let cell_w = 68i32;
+        let cell_h = 46i32;
+        let grid_x = FRAME_MARGIN + (screen_w as i32 - 2 * cell_w - 10).max(0);
+        let grid_y = 16 + 8;
+        let col = (idx % 2) as i32;
+        let row = (idx / 2) as i32;
+        return Rect::new(
+            grid_x + col * cell_w + (cell_w - 20) / 2,
+            grid_y + row * cell_h,
+            20,
+            20,
+        );
     }
-    let compact = false;
-    let cell_w = if compact { 92i32 } else { 72i32 };
-    let cell_h = if compact { 54i32 } else { 56i32 };
-    let icon_size = if compact { 24u32 } else { 32u32 };
+
+    let cell_w = 72i32;
+    let cell_h = 56i32;
     let cols = desktop.cols.max(1);
     let grid_w = (cols as i32 * cell_w).min(screen_w as i32);
-    let grid_x = FRAME_MARGIN + ((screen_w as i32 - grid_w) / 2).max(if compact { 4 } else { 8 });
-    let grid_y = topbar_h + if compact { 18 } else { 24 };
+    let grid_x = FRAME_MARGIN + ((screen_w as i32 - grid_w) / 2).max(8);
+    let grid_y = topbar_h + 24;
     let col = (idx % cols) as i32;
     let row = (idx / cols) as i32;
-    let cx = grid_x + col * cell_w;
-    let cy = grid_y + row * cell_h;
-    Rect::new(
-        cx + (cell_w - icon_size as i32) / 2,
-        cy,
-        icon_size,
-        icon_size,
-    )
+    Rect::new(grid_x + col * cell_w + (cell_w - 32) / 2, grid_y + row * cell_h, 32, 32)
 }
 
 fn closing_to_desktop(
@@ -938,11 +956,12 @@ fn app_window_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
     let (w, h) = canvas
         .output_size()
         .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
+    let bar_h = topbar_height(w, h);
     Rect::new(
         FRAME_MARGIN,
-        TOPBAR_H + FRAME_MARGIN,
+        bar_h + FRAME_MARGIN,
         w.saturating_sub(FRAME_MARGIN as u32 * 2),
-        h.saturating_sub(TOPBAR_H as u32)
+        h.saturating_sub(bar_h as u32)
             .saturating_sub(FRAME_MARGIN as u32 * 2),
     )
 }
@@ -965,7 +984,7 @@ fn draw_app_window(
         // Slim Macintosh-inspired frame. The title stripe is subdued, not
         // a broad high-contrast block on a 320x170 screen.
         let ink = tm.get_color("muted");
-        let paper = tm.get_color("background");
+        let paper = tm.get_color("widget_face_active");
         canvas.set_draw_color(paper);
         let _ = canvas.fill_rect(*rect);
         harbour_shell::ui::draw_rect(canvas, *rect, ink);
@@ -1136,6 +1155,14 @@ fn frame_wait() {
         fn emscripten_sleep(ms: u32);
     }
     unsafe { emscripten_sleep(16) };
+}
+
+fn topbar_height(w: u32, h: u32) -> i32 {
+    if compact_screen(w, h) {
+        16
+    } else {
+        TOPBAR_H
+    }
 }
 
 fn compact_screen(w: u32, h: u32) -> bool {
