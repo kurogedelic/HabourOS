@@ -1,0 +1,43 @@
+name: Cardputer Zero Web simulator preview
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  web-preview:
+    name: Build WASM simulator preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check simulator JavaScript syntax
+        run: node --check web/cardputer-zero.js
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-emscripten
+
+      - name: Install Emscripten
+        uses: mymindstorm/setup-emsdk@v16
+        with:
+          version: 5.0.4
+          actions-cache-folder: emsdk-cache
+
+      - name: Build browser WASM
+        run: ./web/build.sh
+
+      - name: Bundle flat Cardputer Zero simulator
+        run: |
+          mkdir -p dist/cardputer-zero-web
+          cp web/cardputer-zero.html web/cardputer-zero.js \
+             web/harbour_shell.js web/harbour_shell.wasm web/harbour_shell.data \
+             dist/cardputer-zero-web/
+
+      - name: Upload runnable simulator
+        uses: actions/upload-artifact@v4
+        with:
+          name: harbour-os-cardputer-zero-web
+          path: dist/cardputer-zero-web/
