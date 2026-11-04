@@ -146,9 +146,9 @@ impl Desktop {
         x: i32,
         y: i32,
         w: u32,
-        _h: u32,
+        h: u32,
     ) -> DesktopAction {
-        if let Some(idx) = self.hit_icon(input.x, input.y, x, y, w) {
+        if let Some(idx) = self.hit_icon(input.x, input.y, x, y, w, h) {
             self.selected = idx;
             if input.action == PointerAction::ButtonUp
                 && input.button == Some(PointerButton::Left)
@@ -177,9 +177,12 @@ impl Desktop {
         let amber = theme.get_color("foreground");
         let muted = theme.get_color("muted");
         let background = theme.get_color("background");
+        let compact = compact_display(w, h);
 
-        let icon_size = 32u32;
-        let layout = self.layout(x, y, w);
+        // Macintosh-like desktop on a 320x170 handheld: three columns,
+        // two rows, inverted icon and label for the focused application.
+        let icon_size = if compact { 30u32 } else { 32u32 };
+        let layout = self.layout(x, y, w, h);
 
         for (i, app) in self.apps.iter().enumerate() {
             let (cx, cy) = layout.cell_origin(i);
@@ -195,48 +198,44 @@ impl Desktop {
             );
             // 選択中は背景を Amber で塗ってアイコンを反転（黒アイコン風）
             if is_selected {
-                c.set_draw_color(muted);
+                c.set_draw_color(if compact { amber } else { muted });
                 let _ = c.fill_rect(Rect::new(
                     icon_dst.x() - 2,
                     icon_dst.y() - 2,
                     icon_dst.width() + 4,
                     icon_dst.height() + 4,
                 ));
-                // 白×透明アイコンをそのまま描くと Amber 背景に溶けるので、
-                // 背景色で染色して「反転」表現
+                // Focus is represented by an actual inverse bitmap, not a glow.
                 let _ = assets.blit_tinted(c, app.icon, Some(icon_dst), background);
             } else {
                 let _ = assets.blit_tinted(c, app.icon, Some(icon_dst), amber);
             }
 
-            // ラベル
             let label_w = font.measure_text(app.label);
             let lx = cx + (layout.cell_w - label_w) / 2;
-            let ly = cy + icon_size as i32 + 2;
-            let label_col = if is_selected { amber } else { amber };
-            font.draw_text(c, lx, ly, app.label, label_col);
+            let ly = cy + icon_size as i32 + 3;
+            if compact && is_selected {
+                c.set_draw_color(amber);
+                let _ = c.fill_rect(Rect::new(lx - 3, ly - 1, (label_w + 6).max(1) as u32, 15));
+            }
+            font.draw_text(c, lx, ly, app.label, if compact && is_selected { background } else { amber });
 
-            // 選択中ラベルの下線（Classic 風）
-            if is_selected {
+            if is_selected && !compact {
                 ui::line(c, lx, ly + 13, lx + label_w, ly + 13, amber);
             }
         }
 
         // 操作ヒント（下部）
-        if h >= 56 {
-            let hint = if w <= 360 {
-                "Arrows Move  Enter Open"
-            } else {
-                "Arrows: select  Enter: launch"
-            };
+        if !compact && h >= 56 {
+            let hint = "Arrows: select  Enter: launch";
             let hw = font.measure_text(hint);
             let hx = x + ((w as i32 - hw) / 2).max(4);
             font.draw_text(c, hx, y + h as i32 - 16, hint, muted);
         }
     }
 
-    fn hit_icon(&self, px: i32, py: i32, x: i32, y: i32, w: u32) -> Option<usize> {
-        let layout = self.layout(x, y, w);
+    fn hit_icon(&self, px: i32, py: i32, x: i32, y: i32, w: u32, h: u32) -> Option<usize> {
+        let layout = self.layout(x, y, w, h);
         self.apps.iter().enumerate().find_map(|(idx, _)| {
             let (cx, cy) = layout.cell_origin(idx);
             let hit = Rect::new(cx, cy, layout.cell_w as u32, layout.cell_h as u32);
@@ -248,13 +247,14 @@ impl Desktop {
         })
     }
 
-    fn layout(&self, x: i32, y: i32, w: u32) -> DesktopLayout {
+    fn layout(&self, x: i32, y: i32, w: u32, h: u32) -> DesktopLayout {
         let cols = self.cols.max(1);
-        let cell_w = 72i32;
-        let cell_h = 56i32;
+        let compact = compact_display(w, h);
+        let cell_w = if compact { 100i32 } else { 72i32 };
+        let cell_h = if compact { 60i32 } else { 56i32 };
         let grid_w = (cols as i32 * cell_w).min(w as i32);
-        let grid_x = x + ((w as i32 - grid_w) / 2).max(8);
-        let grid_y = y + 24;
+        let grid_x = x + ((w as i32 - grid_w) / 2).max(if compact { 4 } else { 8 });
+        let grid_y = y + if compact { 12 } else { 24 };
         DesktopLayout {
             cols,
             cell_w,
@@ -263,6 +263,11 @@ impl Desktop {
             grid_y,
         }
     }
+}
+
+/// Physical screen coordinates are used directly; no interpolation or scaling.
+fn compact_display(w: u32, h: u32) -> bool {
+    w <= 360 && h <= 200
 }
 
 struct DesktopLayout {
