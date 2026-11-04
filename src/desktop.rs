@@ -335,7 +335,13 @@ impl Desktop {
                 AppKind::Snake => "SNAKE / FIELD",
             };
             font.draw_text(c, px, y + 24, kind, ink);
-            font.draw_text(c, px, y + 40, &format!("MODULE {:02} / 06", self.selected + 1), muted);
+            font.draw_text(
+                c,
+                px,
+                y + 40,
+                &format!("MODULE {:02} / 06", self.selected + 1),
+                muted,
+            );
             ui::line(c, px, y + 58, px + pw, y + 58, shadow);
             self.draw_compact_preview(c, font, theme, app.kind, px, y + 63);
         }
