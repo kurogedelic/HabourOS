@@ -305,6 +305,18 @@ mod tests {
     use crate::input::{PointerAction, PointerButton, PointerInput};
 
     #[test]
+    fn cardputer_zero_grid_fits_native_resolution() {
+        let mut desktop = Desktop::new();
+        desktop.set_view(320, 150);
+        let layout = desktop.layout(2, 20, 320, 170);
+        assert_eq!(desktop.cols, 3);
+        assert_eq!(layout.grid_x, 12);
+        assert_eq!(layout.grid_y, 32);
+        let last_row = layout.cell_origin(5).1;
+        assert!(last_row + 30 + 3 + 13 < 170);
+    }
+
+    #[test]
     fn double_clicking_icon_requests_launch() {
         let mut desktop = Desktop::new();
         desktop.set_view(480, 300);
