@@ -78,12 +78,11 @@ impl<'r> Seashore<'r> {
             let mut menu_x = 6;
             for (index, menu) in ["Harbour", "File", "View"].iter().enumerate() {
                 self.font_system.draw_system_text(c, menu_x, 1, menu, ink);
-                menu_x += self.font_system.measure_system_text(menu)
-                    + if index == 0 { 16 } else { 14 };
+                menu_x +=
+                    self.font_system.measure_system_text(menu) + if index == 0 { 16 } else { 14 };
             }
             let clock = os.system_time.get(..5).unwrap_or(&os.system_time);
-            let clock_x =
-                (w as i32 - self.font_system.measure_system_text(clock) - 7).max(0);
+            let clock_x = (w as i32 - self.font_system.measure_system_text(clock) - 7).max(0);
             self.font_system.draw_system_text(c, clock_x, 1, clock, ink);
             return BAR_H;
         }
