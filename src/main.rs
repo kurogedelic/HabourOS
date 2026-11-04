@@ -993,7 +993,7 @@ fn draw_app_window(
         harbour_shell::ui::draw_rect(canvas, *rect, ink);
         let right = rect.x() + rect.width() as i32 - 2;
         let title = fit_text(fs, title, rect.width() as i32 - 55);
-        let title_w = fs.measure_text(&title);
+        let title_w = fs.measure_system_text(&title);
         let title_x = (rect.x() + (rect.width() as i32 - title_w) / 2).max(rect.x() + 20);
         for offset in [4, 7, 10] {
             harbour_shell::ui::line(
@@ -1012,7 +1012,7 @@ fn draw_app_window(
             (title_w + 8).max(1) as u32,
             13,
         ));
-        fs.draw_text(canvas, title_x, rect.y() + 1, &title, amber);
+        fs.draw_system_text(canvas, title_x, rect.y() + 1, &title, amber);
         harbour_shell::ui::draw_rect(canvas, Rect::new(rect.x() + 6, rect.y() + 4, 8, 8), amber);
         harbour_shell::ui::line(
             canvas,
