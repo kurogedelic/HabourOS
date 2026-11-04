@@ -825,15 +825,13 @@ fn handle_pointer_input(
                 out_w,
                 out_h.saturating_sub(topbar_height(out_w, out_h) as u32),
             );
-            if let DesktopAction::Launch(kind) =
-                desktop.handle_pointer(
-                    input,
-                    FRAME_MARGIN,
-                    topbar_height(out_w, out_h),
-                    out_w,
-                    out_h,
-                )
-            {
+            if let DesktopAction::Launch(kind) = desktop.handle_pointer(
+                input,
+                FRAME_MARGIN,
+                topbar_height(out_w, out_h),
+                out_w,
+                out_h,
+            ) {
                 *mode = opening_from_desktop(canvas, desktop, kind);
             }
         }
@@ -934,7 +932,12 @@ fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rec
     let grid_y = topbar_h + 24;
     let col = (idx % cols) as i32;
     let row = (idx / cols) as i32;
-    Rect::new(grid_x + col * cell_w + (cell_w - 32) / 2, grid_y + row * cell_h, 32, 32)
+    Rect::new(
+        grid_x + col * cell_w + (cell_w - 32) / 2,
+        grid_y + row * cell_h,
+        32,
+        32,
+    )
 }
 
 fn closing_to_desktop(
