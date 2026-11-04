@@ -112,6 +112,24 @@ impl Desktop {
     pub fn handle_key(&mut self, key: sdl2::keyboard::Keycode) -> DesktopAction {
         use sdl2::keyboard::Keycode;
         let n = self.apps.len();
+        if self.cols == 1 {
+            // CMI-style index: number keys launch the corresponding page.
+            let direct = match key {
+                Keycode::Num1 => Some(0),
+                Keycode::Num2 => Some(1),
+                Keycode::Num3 => Some(2),
+                Keycode::Num4 => Some(3),
+                Keycode::Num5 => Some(4),
+                Keycode::Num6 => Some(5),
+                _ => None,
+            };
+            if let Some(idx) = direct {
+                self.selected = idx;
+                if let Some(app) = self.apps.get(idx) {
+                    return DesktopAction::Launch(app.kind);
+                }
+            }
+        }
         match key {
             Keycode::Left => {
                 if self.selected > 0 {
@@ -347,7 +365,7 @@ impl Desktop {
         }
 
         ui::line(c, left, bottom - 17, right, bottom - 17, muted);
-        font.draw_text(c, left, bottom - 13, "FN+F/Z/X/C MOVE    ENTER OPEN", muted);
+        font.draw_text(c, left, bottom - 13, "1-6 OPEN   FN+F/Z/X/C MOVE", muted);
     }
 
     fn draw_compact_preview(
@@ -493,6 +511,17 @@ mod tests {
         let row_click = desktop.hit_icon(18, last_row + 4, 2, 20, 320, 170);
         assert_eq!(row_click, Some(5));
         assert!(desktop.hit_icon(210, last_row, 2, 20, 320, 170).is_none());
+    }
+
+    #[test]
+    fn number_key_launches_handheld_index_page() {
+        let mut desktop = Desktop::new();
+        desktop.set_view(320, 150);
+        assert!(matches!(
+            desktop.handle_key(sdl2::keyboard::Keycode::Num6),
+            DesktopAction::Launch(AppKind::Snake)
+        ));
+        assert_eq!(desktop.selected, 5);
     }
 
     #[test]
