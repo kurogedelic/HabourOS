@@ -11,6 +11,11 @@
 - LCD: **320 × 170**, no touch; keyboard: **46 keys**.
 - HarbourOS remains an **SDL2 application**. All existing built-in apps, VFS,
   drawing and rendering stay in Rust, without a separate GUI implementation.
+- Compact UI: Classic Macintosh-inspired light monochrome theme, a 20px menu
+  bar, three columns of desktop icons over two rows, inverse icon selection
+  and striped window title bars. There is no bitmap scaling.
+- The handheld launcher selects `assets/themes/cardputer-zero.yaml` via
+  `HARBOUR_THEME`, keeping the desktop default theme unchanged.
 - Initial goal: launch the desktop and navigate to one app using the built-in
   keyboard, then verify text input and file persistence.
 
@@ -62,7 +67,8 @@ XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 ./run-cardputer-zero.sh
 ```
 
 The script defaults to `SDL_VIDEODRIVER=wayland`, `HARBOUR_WIDTH=320`,
-`HARBOUR_HEIGHT=170` and `HARBOUR_FULLSCREEN=1`; all are overrideable.
+`HARBOUR_HEIGHT=170`, `HARBOUR_FULLSCREEN=1`, and the Cardputer Zero theme;
+all are overrideable.
 It saves VFS data under `$XDG_DATA_HOME/harbour-os/` (or
 `~/.local/share/harbour-os/`), instead of inside the executable directory.
 
