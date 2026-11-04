@@ -168,13 +168,72 @@
     outline: 2px solid #43839e;
     outline-offset: 1px;
   }
+  .theme-toggle {
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    z-index: 2;
+    padding: 7px 12px;
+    border: 1px solid #a5a5a3;
+    background: #dededb;
+    color: #303638;
+    border-radius: 5px;
+    font: 12px/1.2 Arial, sans-serif;
+    cursor: pointer;
+  }
+  .theme-toggle:focus-visible {
+    outline: 2px solid #43839e;
+    outline-offset: 2px;
+  }
+
+  /* Dark mode affects the physical simulator only. The real 320×170
+     HarbourOS framebuffer keeps its selected light-amber OS palette. */
+  body[data-simulator-theme="dark"] { background: #000000; }
+  body[data-simulator-theme="dark"] .device {
+    background: #34383a;
+    border-color: #555a5c;
+  }
+  body[data-simulator-theme="dark"] .screen {
+    background: #08090a;
+    border-color: #15191b;
+  }
+  body[data-simulator-theme="dark"] .keycap {
+    background: #171b1d;
+  }
+  body[data-simulator-theme="dark"] .legend {
+    color: #d9dcde;
+  }
+  body[data-simulator-theme="dark"] .legend.special {
+    color: #ffab8d;
+  }
+  body[data-simulator-theme="dark"] .secondary {
+    color: #83bedb;
+  }
+  body[data-simulator-theme="dark"] .nav-button {
+    background: #191d1f;
+    color: #e9ecee;
+  }
+  body[data-simulator-theme="dark"] .power {
+    background: #bd6d5c;
+  }
+  body[data-simulator-theme="dark"] .key.pressed .keycap,
+  body[data-simulator-theme="dark"] .key.sticky .keycap {
+    background: #b6755e;
+  }
+  body[data-simulator-theme="dark"] .theme-toggle {
+    background: #34383a;
+    color: #e1e4e5;
+    border-color: #666d70;
+  }
   @media (max-width: 440px) {
     .device { width: 98vw; border-radius: 6px; }
     .screen { border-width: 2px; }
   }
 </style>
 </head>
-<body>
+<body data-simulator-theme="dark">
+<button id="theme-toggle" class="theme-toggle" type="button"
+  aria-pressed="true" aria-label="Switch to light mode">Light mode</button>
 <div class="device" aria-label="Cardputer Zero flat simulator">
   <div class="upper">
     <div class="left-space"></div>
