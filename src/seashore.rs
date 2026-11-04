@@ -70,16 +70,16 @@ impl<'r> Seashore<'r> {
         // バー幅は実際の出力サイズに追従
         let (w, h) = c.output_size().unwrap_or((WINDOW_WIDTH, 0));
         if w <= 360 && h <= 200 {
-            // The handheld's Mac-style menu bar: warm white, ink text,
-            // a single underline, and no fictitious battery/network icons.
-            let topbar = self.theme.get_color("topbar_bg");
-            c.set_draw_color(topbar);
+            // Compact Macintosh-like menu strip using the original amber
+            // palette. Thin divider, regular font, no decorative status icons.
+            let muted = self.theme.get_color("muted");
+            c.set_draw_color(black);
             let _ = c.fill_rect(Rect::new(0, 0, w, bar_height as u32));
-            crate::ui::line(c, 0, bar_height - 1, w as i32 - 1, bar_height - 1, amber);
-            self.font_system.draw_text_bold(c, 7, 3, "Harbour", amber);
-            self.font_system.draw_text(c, 82, 3, "Desktop", amber);
+            crate::ui::line(c, 0, bar_height - 1, w as i32 - 1, bar_height - 1, muted);
+            self.font_system.draw_text(c, 7, 3, "Harbour", amber);
+            self.font_system.draw_text(c, 66, 3, "Desktop", muted);
             let clock = os.system_time.get(..5).unwrap_or(&os.system_time);
-            let clock_x = (w as i32 - self.font_system.measure_text(clock) - 8).max(0);
+            let clock_x = (w as i32 - self.font_system.measure_text(clock) - 7).max(0);
             self.font_system.draw_text(c, clock_x, 3, clock, amber);
             return bar_height;
         }
