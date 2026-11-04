@@ -32,13 +32,16 @@
     align-items: center;
     gap: 3%;
     padding: 3%;
+    justify-content: space-between;
   }
   .left-space { width: 15%; flex-shrink: 0; }
   .screen {
-    flex: 1;
+    flex: 0 1 auto;
+    width: auto;
+    height: 100%;
     min-width: 0;
+    max-width: 100%;
     aspect-ratio: 320 / 170;
-    max-height: 100%;
     background: #000000;
     border: 4px solid #44494b;
     border-radius: 4px;
@@ -48,8 +51,12 @@
   /* The actual 320x170 Emscripten SDL2 canvas, not a mock screenshot. */
   #canvas {
     display: block;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 320px !important;
+    height: 170px !important;
+    transform-origin: top left;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     touch-action: none;
@@ -180,6 +187,23 @@
   <div class="keyboard" id="keyboard" aria-label="Interactive keyboard"></div>
 </div>
 <script>
+  // Keep SDL at precisely 320x170; only visually scale the rendered canvas
+  // into the chassis cutout. This prevents SDL2 from using CSS dimensions
+  // as its backing resolution on Chromium and mobile browsers.
+  const physicalWidth = 320;
+  const physicalHeight = 170;
+  const screen = document.querySelector('.screen');
+  const canvas = document.getElementById('canvas');
+  const scaleCanvas = () => {
+    const scale = Math.min(screen.clientWidth / physicalWidth,
+      screen.clientHeight / physicalHeight);
+    canvas.style.transform = 'scale(' + scale + ')';
+    canvas.style.left = ((screen.clientWidth - physicalWidth * scale) / 2) + 'px';
+    canvas.style.top = ((screen.clientHeight - physicalHeight * scale) / 2) + 'px';
+  };
+  new ResizeObserver(scaleCanvas).observe(screen);
+  scaleCanvas();
+
   // One simulator can share the existing HarbourOS Emscripten bundle.
   // Resolution is fixed to the physical Cardputer Zero LCD: 320 x 170.
   var Module = {
