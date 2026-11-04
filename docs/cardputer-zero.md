@@ -27,6 +27,42 @@ Keyboard instructions: <https://docs.m5stack.com/ja/compute/cardputerzero/usage>
 Community launcher and framebuffer reference:
 <https://github.com/CardputerZero/launcher>
 
+## Browser simulator (320 × 170)
+
+The provided flat Cardputer Zero HTML mockup is now a **working browser
+front-end** at `web/cardputer-zero.html`. It uses the same Rust HarbourOS
+SDL2/Emscripten bundle as the existing 3D simulator, but shows it directly on
+the screen inside a flat Cardputer Zero enclosure. No screenshot substitution
+or second simulated operating system is used.
+
+- Native 320 × 170 drawing (pixelated nearest-neighbor at displayed size).
+- Four-row, 46-key flat keyboard with clickable keycaps.
+- FN is sticky for one key: `FN + F` Up, `FN + Z` Left,
+  `FN + X` Down, `FN + C` Right.
+- The up-arrow and Enter keys are clickable; Ctrl is sticky for one command.
+- The two round auxiliary buttons emulate Left and Right navigation.
+- The orange power-shaped control restarts the browser simulator.
+- Browser physical keyboard input goes directly into the existing SDL2 runtime.
+- VFS is persisted through IndexedDB, matching the 3D simulator.
+- This tests layout and browser keyboard behavior, **not** the device's
+  framebuffer, Linux keyboard driver, or actual render speed.
+
+Build and run both simulators locally:
+
+```sh
+./web/build.sh
+python3 -m http.server 8080 --directory web
+# Open http://localhost:8080/cardputer-zero.html
+```
+
+This PR also builds a runnable `harbour-os-cardputer-zero-web` artifact
+under **Cardputer Zero Web simulator preview** in GitHub Actions. Extract the
+artifact and serve the directory with a local HTTP server. The site's direct
+link `https://kurogedelic.github.io/HabourOS/cardputer-zero.html` becomes
+available **only after the PR is merged to main and Pages redeploys**.
+
+The existing `web/index.html` 3D simulator is unchanged.
+
 ## Get an ARM64 binary
 
 On this repo's GitHub Actions page, run **Cardputer Zero ARM64
