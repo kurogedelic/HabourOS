@@ -1,0 +1,13 @@
+# Cardputer Zero: flat, low-glare, keyboard-first palette.
+# Separate from the desktop's retro amber default.
+name: cardputer-zero
+colors:
+  palette:
+    - "#101512" # background
+    - "#26312A" # low-contrast surfaces
+    - "#839388" # muted
+    - "#E2EBDB" # text
+  accent: "#D0EC85"
+  highlight: "#D0EC85"
+  widget_outline: "#566559"
+  widget_outline_dim: "#26312A"
