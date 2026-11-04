@@ -224,7 +224,11 @@ impl Desktop {
 
         // 操作ヒント（下部）
         if h >= 56 {
-            let hint = "Arrows: select  Enter: launch";
+            let hint = if w <= 360 {
+                "Arrows Move  Enter Open"
+            } else {
+                "Arrows: select  Enter: launch"
+            };
             let hw = font.measure_text(hint);
             let hx = x + ((w as i32 - hw) / 2).max(4);
             font.draw_text(c, hx, y + h as i32 - 16, hint, muted);
