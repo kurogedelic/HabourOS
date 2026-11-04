@@ -4,6 +4,36 @@
 (() => {
   'use strict';
 
+  // Appearance belongs to the simulator chassis, never to HarbourOS itself.
+  // Start in dark mode, and remember the user's chosen enclosure finish.
+  const appearanceSwitch = document.getElementById('theme-toggle');
+  const appearanceKey = 'harbour-cardputer-simulator-theme';
+
+  function setAppearance(mode) {
+    const dark = mode === 'dark';
+    document.body.dataset.simulatorTheme = dark ? 'dark' : 'light';
+    appearanceSwitch.textContent = dark ? 'Light mode' : 'Dark mode';
+    appearanceSwitch.setAttribute('aria-label',
+      dark ? 'Switch to light mode' : 'Switch to dark mode');
+    appearanceSwitch.setAttribute('aria-pressed', String(dark));
+  }
+
+  let initialMode = 'dark';
+  try {
+    const stored = localStorage.getItem(appearanceKey);
+    if (stored === 'light' || stored === 'dark') initialMode = stored;
+  } catch (_) {
+    // Private browsing or storage restrictions should not break simulator input.
+  }
+  setAppearance(initialMode);
+  appearanceSwitch.addEventListener('click', () => {
+    const next = document.body.dataset.simulatorTheme === 'dark' ? 'light' : 'dark';
+    setAppearance(next);
+    try {
+      localStorage.setItem(appearanceKey, next);
+    } catch (_) {}
+  });
+
   const rows = [
     ['ESC','1','2','3','4','5','6','7','8','9','0'],
     ['TAB','Q','W','E','R','T','Y','U','I','O','P'],
