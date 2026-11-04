@@ -1,4 +1,4 @@
-//! Desktop - アイコングリッド型デスクトップ（Classic Mac 風）。
+//! Desktop - Classic Mac-style icon grid with Cardputer Zero layout.
 //!
 //! 操作:
 //! - 矢印キー: アイコン選択移動
@@ -100,8 +100,8 @@ impl Desktop {
     /// 画面幅に合わせてアイコングリッド列数を更新する。
     pub fn set_view(&mut self, w: u32, _h: u32) {
         if w <= 360 {
-            // Cardputer Zero uses an index list, not desktop icon columns.
-            self.cols = 1;
+            // A right-aligned two-column desktop, not an INDEX page.
+            self.cols = 2;
         } else {
             let usable_w = w as i32 - 48;
             self.cols = (usable_w / 72).max(1) as usize;
@@ -112,8 +112,8 @@ impl Desktop {
     pub fn handle_key(&mut self, key: sdl2::keyboard::Keycode) -> DesktopAction {
         use sdl2::keyboard::Keycode;
         let n = self.apps.len();
-        if self.cols == 1 {
-            // CMI-style index: number keys launch the corresponding page.
+        if self.cols == 2 {
+            // Direct 1–6 app shortcuts remain available on the handheld.
             let direct = match key {
                 Keycode::Num1 => Some(0),
                 Keycode::Num2 => Some(1),
@@ -132,12 +132,12 @@ impl Desktop {
         }
         match key {
             Keycode::Left => {
-                if self.selected > 0 {
+                if self.selected > 0 && (self.cols != 2 || self.selected % 2 == 1) {
                     self.selected -= 1;
                 }
             }
             Keycode::Right => {
-                if self.selected + 1 < n {
+                if self.selected + 1 < n && (self.cols != 2 || self.selected % 2 == 0) {
                     self.selected += 1;
                 }
             }
@@ -202,7 +202,7 @@ impl Desktop {
         let background = theme.get_color("background");
         let compact = compact_display(w, h);
         if compact {
-            self.draw_compact(c, font, theme, x, y, w, h);
+            self.draw_compact(c, assets, font, theme, x, y, w, h);
             return;
         }
 
@@ -285,15 +285,13 @@ impl Desktop {
         }
     }
 
-    /// Small-screen INDEX page: a functional text-based launch list and a
-    /// context preview, taking cues from Fairlight CMI page layouts rather
-    /// than scaling desktop icons into a handheld display.
-    ///
-    /// Uses the same four palette colors as the rest of HarbourOS; graphics
-    /// are drawn directly from geometry and ASCII font, no extra bitmaps.
+    /// Cardputer Zero: a real icon desktop, with System 6/7-inspired
+    /// layout adapted to a 320x170 screen. The left side remains a workspace
+    /// and all six apps sit in two right-aligned columns.
     fn draw_compact(
         &self,
         c: &mut Canvas<Window>,
+        assets: &mut AssetStore,
         font: &FontSystem,
         theme: &ThemeManager,
         x: i32,
@@ -303,148 +301,49 @@ impl Desktop {
     ) {
         let ink = theme.get_color("foreground");
         let muted = theme.get_color("muted");
-        let shadow = theme.get_color("shadow");
-        let background = theme.get_color("background");
-
-        let left = x + 6;
-        let right = x + w as i32 - 8;
-        let split = x + 145;
-        let top = y + 2;
-        // The caller passes the full output height, not the available
-        // content height below the menu bar.
-        let bottom = h as i32 - 1;
-
-        font.draw_text(c, left, top, "INDEX / APPLICATIONS", ink);
-        ui::line(c, left, top + 15, right, top + 15, muted);
-        ui::line(c, split, top + 17, split, bottom - 20, shadow);
+        let paper = theme.get_color("background");
+        let grid = self.layout(x, y, w, h);
+        const ICON_SIZE: u32 = 20;
 
         for (i, app) in self.apps.iter().enumerate() {
-            let row_y = y + 22 + i as i32 * 18;
-            let label = match app.kind {
-                AppKind::TextEditor => "TEXT EDITOR",
-                AppKind::FileBrowser => "FILES",
-                AppKind::Clock => "CLOCK",
-                AppKind::Dictionary => "DICTIONARY",
-                AppKind::Calculator => "CALCULATOR",
-                AppKind::Snake => "SNAKE",
-            };
-            let text = format!("{:02}  {}", i + 1, label);
-            if i == self.selected {
-                c.set_draw_color(muted);
-                let _ = c.fill_rect(Rect::new(left - 2, row_y - 2, 133, 17));
-                font.draw_text(c, left, row_y, &text, background);
-                font.draw_text(c, split - 16, row_y, ">", ink);
-            } else {
-                font.draw_text(c, left, row_y, &text, ink);
-            }
-        }
+            let (cx, cy) = grid.cell_origin(i);
+            let selected = i == self.selected;
+            let icon_x = cx + (grid.cell_w - ICON_SIZE as i32) / 2;
+            let icon_rect = Rect::new(icon_x, cy, ICON_SIZE, ICON_SIZE);
 
-        // Selected application's display is an actual contextual preview,
-        // not a synthetic system status or an unrelated decorative waveform.
-        if let Some(app) = self.apps.get(self.selected) {
-            let px = split + 10;
-            let pw = (right - px).max(0);
-            let kind = match app.kind {
-                AppKind::TextEditor => "EDIT / BUFFER",
-                AppKind::FileBrowser => "FILES / TREE",
-                AppKind::Clock => "CLOCK / DIAL",
-                AppKind::Dictionary => "DICT / SEARCH",
-                AppKind::Calculator => "CALC / STACK",
-                AppKind::Snake => "SNAKE / FIELD",
-            };
-            font.draw_text(c, px, y + 24, kind, ink);
-            font.draw_text(
-                c,
-                px,
-                y + 40,
-                &format!("MODULE {:02} / 06", self.selected + 1),
-                muted,
-            );
-            ui::line(c, px, y + 58, px + pw, y + 58, shadow);
-            self.draw_compact_preview(c, font, theme, app.kind, px, y + 63);
-        }
+            // Small focus border, never a large opaque icon tile.
+            if selected {
+                ui::draw_rect(
+                    c,
+                    Rect::new(icon_x - 2, cy - 2, ICON_SIZE + 4, ICON_SIZE + 4),
+                    muted,
+                );
+            }
+            let _ = assets.blit_tinted(c, app.icon, Some(icon_rect), ink);
 
-        ui::line(c, left, bottom - 17, right, bottom - 17, muted);
-        font.draw_text(c, left, bottom - 13, "1-6 OPEN   FN+F/Z/X/C MOVE", muted);
-    }
-
-    fn draw_compact_preview(
-        &self,
-        c: &mut Canvas<Window>,
-        font: &FontSystem,
-        theme: &ThemeManager,
-        kind: AppKind,
-        x: i32,
-        y: i32,
-    ) {
-        let ink = theme.get_color("foreground");
-        let muted = theme.get_color("muted");
-        let shadow = theme.get_color("shadow");
-        match kind {
-            AppKind::TextEditor => {
-                font.draw_text(c, x, y, "UNTITLED.TXT", muted);
-                font.draw_text(c, x, y + 17, "01  HELLO, WORLD", ink);
-                font.draw_text(c, x, y + 31, "02  _", ink);
-            }
-            AppKind::FileBrowser => {
-                font.draw_text(c, x, y, "/ROOT", ink);
-                font.draw_text(c, x + 6, y + 15, "|-- README.TXT", muted);
-                font.draw_text(c, x + 6, y + 30, "|-- NOTES/", muted);
-            }
-            AppKind::Clock => {
-                // Small oscilloscope-like square wave whose grid encodes
-                // the twelve clock divisions without pretending live data.
-                ui::line(c, x, y + 24, x + 136, y + 24, shadow);
-                for i in 0..13 {
-                    let tx = x + i * 11;
-                    ui::line(c, tx, y + 20, tx, y + 28, shadow);
-                }
-                font.draw_text(c, x, y, "00  03  06  09  12", muted);
-                font.draw_text(c, x, y + 33, "HOURS / MINUTES", ink);
-            }
-            AppKind::Dictionary => {
-                font.draw_text(c, x, y, "A B C D E F G H I", ink);
-                font.draw_text(c, x, y + 15, "J K L M N O P Q R", muted);
-                font.draw_text(c, x, y + 30, "S T U V W X Y Z", muted);
-            }
-            AppKind::Calculator => {
-                font.draw_text(c, x, y, "   0.0000", ink);
-                ui::line(c, x, y + 15, x + 128, y + 15, muted);
-                font.draw_text(c, x, y + 20, "7  8  9  /", muted);
-                font.draw_text(c, x, y + 34, "4  5  6  *", muted);
-            }
-            AppKind::Snake => {
-                let sx = x + 7;
-                for i in 0..9 {
-                    ui::line(c, sx + i * 12, y + 2, sx + i * 12, y + 38, shadow);
-                }
-                for i in 0..4 {
-                    ui::line(c, sx, y + 2 + i * 12, sx + 96, y + 2 + i * 12, shadow);
-                }
-                ui::line(c, sx + 12, y + 26, sx + 48, y + 26, ink);
-                ui::line(c, sx + 48, y + 26, sx + 48, y + 14, ink);
-                ui::line(c, sx + 48, y + 14, sx + 72, y + 14, ink);
+            // A native 6x13 font allows full names (TextEditor, Dictionary).
+            // Classic Mac label inversion is the strongest focus indication.
+            let label_w = font.measure_text(app.label);
+            let lx = cx + (grid.cell_w - label_w) / 2;
+            let ly = cy + ICON_SIZE as i32 + 3;
+            if selected {
                 c.set_draw_color(ink);
-                let _ = c.fill_rect(Rect::new(sx + 84, y + 26, 4, 4));
+                let _ = c.fill_rect(Rect::new(
+                    lx - 3,
+                    ly - 1,
+                    (label_w + 6) as u32,
+                    15,
+                ));
             }
+            font.draw_text(c, lx, ly, app.label, if selected { paper } else { ink });
         }
     }
 
     fn hit_icon(&self, px: i32, py: i32, x: i32, y: i32, w: u32, h: u32) -> Option<usize> {
-        if compact_display(w, h) {
-            let first_y = y + 22;
-            if px >= x + 4 && px <= x + 139 && py >= first_y {
-                let index = ((py - first_y) / 18) as usize;
-                if index < self.apps.len() {
-                    return Some(index);
-                }
-            }
-            return None;
-        }
         let layout = self.layout(x, y, w, h);
         self.apps.iter().enumerate().find_map(|(idx, _)| {
             let (cx, cy) = layout.cell_origin(idx);
-            let hit = Rect::new(cx, cy, layout.cell_w as u32, layout.cell_h as u32);
+            let hit = Rect::new(cx, cy - 3, layout.cell_w as u32, layout.cell_h as u32);
             if hit.contains_point((px, py)) {
                 Some(idx)
             } else {
@@ -456,11 +355,15 @@ impl Desktop {
     fn layout(&self, x: i32, y: i32, w: u32, h: u32) -> DesktopLayout {
         let cols = self.cols.max(1);
         let compact = compact_display(w, h);
-        let cell_w = if compact { 92i32 } else { 72i32 };
-        let cell_h = if compact { 54i32 } else { 56i32 };
+        let cell_w = if compact { 68i32 } else { 72i32 };
+        let cell_h = if compact { 46i32 } else { 56i32 };
         let grid_w = (cols as i32 * cell_w).min(w as i32);
-        let grid_x = x + ((w as i32 - grid_w) / 2).max(if compact { 4 } else { 8 });
-        let grid_y = y + if compact { 18 } else { 24 };
+        let grid_x = if compact {
+            x + (w as i32 - grid_w - 10).max(0)
+        } else {
+            x + ((w as i32 - grid_w) / 2).max(8)
+        };
+        let grid_y = y + if compact { 8 } else { 24 };
         DesktopLayout {
             cols,
             cell_w,
@@ -501,22 +404,45 @@ mod tests {
     use crate::input::{PointerAction, PointerButton, PointerInput};
 
     #[test]
-    fn cardputer_zero_index_fits_native_resolution() {
+    fn cardputer_zero_desktop_uses_two_right_aligned_columns() {
         let mut desktop = Desktop::new();
-        desktop.set_view(320, 150);
-        assert_eq!(desktop.cols, 1);
+        desktop.set_view(320, 154);
+        assert_eq!(desktop.cols, 2);
         assert_eq!(desktop.apps.len(), 6);
-        let last_row = 20 + 22 + 5 * 18;
-        assert!(last_row + 15 < 170);
-        let row_click = desktop.hit_icon(18, last_row + 4, 2, 20, 320, 170);
-        assert_eq!(row_click, Some(5));
-        assert!(desktop.hit_icon(210, last_row, 2, 20, 320, 170).is_none());
+        let layout = desktop.layout(2, 16, 320, 170);
+        assert_eq!(layout.grid_x, 176);
+        assert_eq!(layout.grid_y, 24);
+        assert_eq!(layout.cell_origin(5), (244, 116));
+        // Last label fits beneath the third icon row.
+        assert!(layout.cell_origin(5).1 + 20 + 3 + 13 <= 170);
+        // Left desktop workspace is not a clickable icon.
+        assert_eq!(desktop.hit_icon(60, 50, 2, 16, 320, 170), None);
+        assert_eq!(desktop.hit_icon(265, 123, 2, 16, 320, 170), Some(5));
     }
 
     #[test]
-    fn number_key_launches_handheld_index_page() {
+    fn arrows_follow_icon_grid_without_crossing_rows() {
+        use sdl2::keyboard::Keycode;
         let mut desktop = Desktop::new();
-        desktop.set_view(320, 150);
+        desktop.set_view(320, 154);
+        desktop.handle_key(Keycode::Left);
+        assert_eq!(desktop.selected, 0);
+        desktop.handle_key(Keycode::Right);
+        assert_eq!(desktop.selected, 1);
+        desktop.handle_key(Keycode::Right);
+        assert_eq!(desktop.selected, 1);
+        desktop.handle_key(Keycode::Down);
+        assert_eq!(desktop.selected, 3);
+        desktop.handle_key(Keycode::Up);
+        assert_eq!(desktop.selected, 1);
+        desktop.handle_key(Keycode::Left);
+        assert_eq!(desktop.selected, 0);
+    }
+
+    #[test]
+    fn number_key_launches_handheld_icon() {
+        let mut desktop = Desktop::new();
+        desktop.set_view(320, 154);
         assert!(matches!(
             desktop.handle_key(sdl2::keyboard::Keycode::Num6),
             DesktopAction::Launch(AppKind::Snake)
