@@ -25,8 +25,9 @@ impl<'r> Seashore<'r> {
         println!("Loaded M+ F12R font");
 
         // テーマをロード
-        let theme =
-            Theme::load_from_yaml("assets/themes/default.yaml").expect("Failed to load theme");
+        let theme_path = std::env::var("HARBOUR_THEME")
+            .unwrap_or_else(|_| "assets/themes/default.yaml".to_string());
+        let theme = Theme::load_from_yaml(&theme_path).expect("Failed to load theme");
         println!("Loaded theme: {}", theme.name);
 
         let theme_manager = ThemeManager::new(theme);
@@ -67,7 +68,21 @@ impl<'r> Seashore<'r> {
         let black = self.theme.get_color("background");
 
         // バー幅は実際の出力サイズに追従
-        let (w, _) = c.output_size().unwrap_or((WINDOW_WIDTH, 0));
+        let (w, h) = c.output_size().unwrap_or((WINDOW_WIDTH, 0));
+        if w <= 360 && h <= 200 {
+            // The handheld's Mac-style menu bar: warm white, ink text,
+            // a single underline, and no fictitious battery/network icons.
+            let topbar = self.theme.get_color("topbar_bg");
+            c.set_draw_color(topbar);
+            let _ = c.fill_rect(Rect::new(0, 0, w, bar_height as u32));
+            crate::ui::line(c, 0, bar_height - 1, w as i32 - 1, bar_height - 1, amber);
+            self.font_system.draw_text_bold(c, 7, 3, "Harbour", amber);
+            self.font_system.draw_text(c, 82, 3, "Desktop", amber);
+            let clock = os.system_time.get(..5).unwrap_or(&os.system_time);
+            let clock_x = (w as i32 - self.font_system.measure_text(clock) - 8).max(0);
+            self.font_system.draw_text(c, clock_x, 3, clock, amber);
+            return bar_height;
+        }
 
         // 1) バー領域の背景（fill はバー地のみ例外的に黒で塗る＝背景と同色なので実質不可視）
         let _ = c.set_draw_color(black);
