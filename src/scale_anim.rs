@@ -43,7 +43,12 @@ impl ScaleAnim {
             to,
             t: 0.0,
             dir: AnimDir::Opening,
-            speed: 0.14,
+            // Compact handheld windows should appear quickly (2 frames).
+            speed: if to.width() <= 360 && to.height() <= 200 {
+                0.5
+            } else {
+                0.14
+            },
         }
     }
 
@@ -53,7 +58,11 @@ impl ScaleAnim {
             to,
             t: 0.0,
             dir: AnimDir::Closing,
-            speed: 0.18,
+            speed: if from.width() <= 360 && from.height() <= 200 {
+                0.5
+            } else {
+                0.18
+            },
         }
     }
 
