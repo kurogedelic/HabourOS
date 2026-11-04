@@ -218,7 +218,17 @@ impl Desktop {
                 c.set_draw_color(amber);
                 let _ = c.fill_rect(Rect::new(lx - 3, ly - 1, (label_w + 6).max(1) as u32, 15));
             }
-            font.draw_text(c, lx, ly, app.label, if compact && is_selected { background } else { amber });
+            font.draw_text(
+                c,
+                lx,
+                ly,
+                app.label,
+                if compact && is_selected {
+                    background
+                } else {
+                    amber
+                },
+            );
 
             if is_selected && !compact {
                 ui::line(c, lx, ly + 13, lx + label_w, ly + 13, amber);
