@@ -292,7 +292,9 @@ impl Desktop {
         let right = x + w as i32 - 8;
         let split = x + 145;
         let top = y + 2;
-        let bottom = y + h as i32 - 1;
+        // The caller passes the full output height, not the available
+        // content height below the menu bar.
+        let bottom = h as i32 - 1;
 
         font.draw_text(c, left, top, "INDEX / APPLICATIONS", ink);
         ui::line(c, left, top + 15, right, top + 15, muted);
