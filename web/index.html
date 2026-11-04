@@ -2,97 +2,20 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <!-- iPad 横向き (1024x768) を基準にレイアウト。他サイズでも筐体をフィットさせる -->
-  <meta name="viewport" content="width=1024, initial-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Harbour OS</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@1,400&display=block" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HarbourOS — Cardputer Zero Simulator</title>
+  <meta http-equiv="refresh" content="0; url=cardputer-zero.html">
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      overflow: hidden;
-      background: #d9d7d2;
-      touch-action: none;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-    #stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-    /* SDL の描画先。見えないが DOM 上に置き、イベント座標計算に使う */
-    #canvas {
-      position: fixed;
-      left: 0;
-      top: 0;
-      opacity: 0;
-      pointer-events: none;
-      image-rendering: pixelated;
-    }
-    #status {
-      position: fixed;
-      left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      color: #7d7a72;
-      font: 12px/1.4 ui-monospace, Menlo, monospace;
-      letter-spacing: 0.08em;
-      pointer-events: none;
-    }
+    html,body { margin:0; min-height:100%; background:#000; color:#f0d6a0; font:14px Arial,sans-serif; }
+    body { min-height:100vh; display:grid; place-items:center; }
+    a { color:#ffe8b8; }
   </style>
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-      }
-    }
+  <script>
+    // Preserve query/hash, and use a relative URL for GitHub Pages project paths.
+    location.replace('cardputer-zero.html' + location.search + location.hash);
   </script>
 </head>
 <body>
-  <canvas id="stage"></canvas>
-  <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
-  <div id="status">LOADING HARBOUR OS…</div>
-
-  <script>
-    // OS 解像度は ?w=640&h=320 で変更可（HARBOUR_WIDTH / HARBOUR_HEIGHT）
-    const params = new URLSearchParams(location.search);
-    const osW = Math.max(160, parseInt(params.get('w')) || 640);
-    const osH = Math.max(160, parseInt(params.get('h')) || 320);
-    const sdlCanvas = document.getElementById('canvas');
-    sdlCanvas.width = osW;
-    sdlCanvas.height = osH;
-    sdlCanvas.style.width = osW + 'px';
-    sdlCanvas.style.height = osH + 'px';
-
-    var Module = {
-      canvas: sdlCanvas,
-      osSize: [osW, osH],
-      preRun: [() => {
-        // VFS スナップショットを IndexedDB に永続化
-        const FS = Module.FS;
-        const IDB = typeof IDBFS !== 'undefined' ? IDBFS : FS.filesystems.IDBFS;
-        FS.mkdir('/persist');
-        FS.mount(IDB, {}, '/persist');
-        Module.addRunDependency('idbfs');
-        FS.syncfs(true, () => Module.removeRunDependency('idbfs'));
-        Module.ENV.HARBOUR_VFS_PATH = '/persist/harbour_vfs.yaml';
-        Module.ENV.HARBOUR_WIDTH = String(osW);
-        Module.ENV.HARBOUR_HEIGHT = String(osH);
-      }],
-      onRuntimeInitialized() {
-        document.getElementById('status').textContent = '';
-        const sync = () => Module.FS.syncfs(false, () => {});
-        setInterval(sync, 3000);
-        addEventListener('pagehide', sync);
-        document.addEventListener('visibilitychange', sync);
-        window.dispatchEvent(new Event('harbour-ready'));
-      },
-      print: (t) => console.log(t),
-      printErr: (t) => console.warn(t),
-    };
-  </script>
-  <script src="harbour_shell.js"></script>
-  <script type="module" src="main.js"></script>
+  <p>Opening <a href="cardputer-zero.html">Cardputer Zero simulator</a>…</p>
 </body>
 </html>

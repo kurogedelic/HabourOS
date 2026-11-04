@@ -168,6 +168,28 @@
     outline: 2px solid #43839e;
     outline-offset: 1px;
   }
+  .simulator-nav {
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));
+    z-index: 2;
+    padding: 7px 12px;
+    border: 1px solid #666d70;
+    background: #34383a;
+    color: #e1e4e5;
+    border-radius: 5px;
+    font: 12px/1.2 Arial, sans-serif;
+    text-decoration: none;
+  }
+  .simulator-nav:focus-visible {
+    outline: 2px solid #43839e;
+    outline-offset: 2px;
+  }
+  body[data-simulator-theme="light"] .simulator-nav {
+    background: #dededb;
+    color: #303638;
+    border-color: #a5a5a3;
+  }
   .theme-toggle {
     position: fixed;
     top: max(12px, env(safe-area-inset-top));
@@ -232,6 +254,7 @@
 </style>
 </head>
 <body data-simulator-theme="dark">
+<a class="simulator-nav" href="3d.html">3D simulator</a>
 <button id="theme-toggle" class="theme-toggle" type="button"
   aria-pressed="true" aria-label="Switch to light mode">Light mode</button>
 <div class="device" aria-label="Cardputer Zero flat simulator">

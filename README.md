@@ -54,25 +54,34 @@ The default theme lives at `assets/themes/default.yaml`.
 
 ## Web (WebAssembly) Build
 
-`web/` contains a browser build. The Rust shell is compiled with Emscripten
-(`wasm32-unknown-emscripten`, SDL2 / SDL2_image ports) and its screen is shown
-on a Three.js 3D enclosure with a clickable QWERTY keyboard. The page is laid
-out for iPad landscape (1024x768) and fits the enclosure to other sizes.
+The default URL launches the **Cardputer Zero 320×170 simulator**, hosted
+inside the flat 46-key device chassis. Use the `3D simulator` link at the
+top left to switch to the original, larger Three.js enclosure.
 
-Live: https://kurogedelic.github.io/HabourOS/ (deployed from `main` by
-`.github/workflows/pages.yml`).
+- [Default — Cardputer Zero](https://kurogedelic.github.io/HabourOS/)
+- [Original 3D simulator](https://kurogedelic.github.io/HabourOS/3d.html)
+- [Direct Cardputer Zero page](https://kurogedelic.github.io/HabourOS/cardputer-zero.html)
+
+The root `web/index.html` redirects to `web/cardputer-zero.html` and
+preserves the URL query and fragment. The former `web/index.html` is preserved
+as `web/3d.html`, still using the same `web/main.js` Three.js code.
+Both use the Rust SDL2/Emscripten WASM build. The Cardputer simulator
+defaults to a dark-grey chassis on black (toggleable without changing the
+warm-amber LCD palette), while the 3D version keeps its previous design.
 
 ```bash
 rustup target add wasm32-unknown-emscripten   # once; also needs emcc
 ./web/build.sh
 python3 -m http.server 8080 --directory web
+# Visit http://localhost:8080/ to open Cardputer Zero
+# Visit http://localhost:8080/3d.html for the original 3D simulator
 ```
 
-- Physical keyboard input goes straight to SDL; the 3D keys mirror it.
-- 3D `Shift` / `Ctrl` are sticky and release after the next key.
-- Click or drag on the 3D screen to use the pointer.
+- Physical keyboard input goes straight to SDL; Cardputer's 46 clickable
+  keys are available for pointer/touch interaction.
+- Cardputer display is 320×170; the original 3D simulator keeps its
+  independent, configurable dimensions (`?w=800&h=320`).
 - The VFS snapshot is stored in IndexedDB (`/persist/harbour_vfs.yaml`).
-- `?w=800&h=320` changes the OS resolution (default 640x320, a wide 2:1 screen).
 
 ## Cardputer Zero (experimental)
 
