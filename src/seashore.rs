@@ -76,8 +76,8 @@ impl<'r> Seashore<'r> {
             c.set_draw_color(black);
             let _ = c.fill_rect(Rect::new(0, 0, w, bar_height as u32));
             crate::ui::line(c, 0, bar_height - 1, w as i32 - 1, bar_height - 1, muted);
-            self.font_system.draw_text(c, 7, 3, "Harbour", amber);
-            self.font_system.draw_text(c, 66, 3, "Desktop", muted);
+            self.font_system.draw_text(c, 7, 3, "HARBOUR OS", amber);
+            self.font_system.draw_text(c, 89, 3, "PAGE 00 / INDEX", muted);
             let clock = os.system_time.get(..5).unwrap_or(&os.system_time);
             let clock_x = (w as i32 - self.font_system.measure_text(clock) - 7).max(0);
             self.font_system.draw_text(c, clock_x, 3, clock, amber);
