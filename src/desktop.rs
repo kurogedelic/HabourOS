@@ -179,9 +179,10 @@ impl Desktop {
         let background = theme.get_color("background");
         let compact = compact_display(w, h);
 
-        // Macintosh-like desktop on a 320x170 handheld: three columns,
-        // two rows, inverted icon and label for the focused application.
-        let icon_size = if compact { 30u32 } else { 32u32 };
+        // Three-by-two Finder-like grid for the native 320x170 screen.
+        // Use small, unscaled icons; selection is indicated by a thin border
+        // and an inverted label, not a large filled tile.
+        let icon_size = if compact { 24u32 } else { 32u32 };
         let layout = self.layout(x, y, w, h);
 
         for (i, app) in self.apps.iter().enumerate() {
@@ -196,16 +197,29 @@ impl Desktop {
                 icon_size,
                 icon_size,
             );
-            // 選択中は背景を Amber で塗ってアイコンを反転（黒アイコン風）
-            if is_selected {
-                c.set_draw_color(if compact { amber } else { muted });
+            if compact {
+                // One-pixel outline replaces the heavy inverse icon block.
+                if is_selected {
+                    ui::draw_rect(
+                        c,
+                        Rect::new(
+                            icon_dst.x() - 2,
+                            icon_dst.y() - 2,
+                            icon_dst.width() + 4,
+                            icon_dst.height() + 4,
+                        ),
+                        muted,
+                    );
+                }
+                let _ = assets.blit_tinted(c, app.icon, Some(icon_dst), amber);
+            } else if is_selected {
+                c.set_draw_color(muted);
                 let _ = c.fill_rect(Rect::new(
                     icon_dst.x() - 2,
                     icon_dst.y() - 2,
                     icon_dst.width() + 4,
                     icon_dst.height() + 4,
                 ));
-                // Focus is represented by an actual inverse bitmap, not a glow.
                 let _ = assets.blit_tinted(c, app.icon, Some(icon_dst), background);
             } else {
                 let _ = assets.blit_tinted(c, app.icon, Some(icon_dst), amber);
@@ -260,11 +274,11 @@ impl Desktop {
     fn layout(&self, x: i32, y: i32, w: u32, h: u32) -> DesktopLayout {
         let cols = self.cols.max(1);
         let compact = compact_display(w, h);
-        let cell_w = if compact { 100i32 } else { 72i32 };
-        let cell_h = if compact { 60i32 } else { 56i32 };
+        let cell_w = if compact { 92i32 } else { 72i32 };
+        let cell_h = if compact { 54i32 } else { 56i32 };
         let grid_w = (cols as i32 * cell_w).min(w as i32);
         let grid_x = x + ((w as i32 - grid_w) / 2).max(if compact { 4 } else { 8 });
-        let grid_y = y + if compact { 12 } else { 24 };
+        let grid_y = y + if compact { 18 } else { 24 };
         DesktopLayout {
             cols,
             cell_w,
@@ -310,10 +324,10 @@ mod tests {
         desktop.set_view(320, 150);
         let layout = desktop.layout(2, 20, 320, 170);
         assert_eq!(desktop.cols, 3);
-        assert_eq!(layout.grid_x, 12);
-        assert_eq!(layout.grid_y, 32);
+        assert_eq!(layout.grid_x, 24);
+        assert_eq!(layout.grid_y, 38);
         let last_row = layout.cell_origin(5).1;
-        assert!(last_row + 30 + 3 + 13 < 170);
+        assert!(last_row + 24 + 3 + 13 < 170);
     }
 
     #[test]
