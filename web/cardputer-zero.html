@@ -201,8 +201,12 @@
     canvas.style.left = ((screen.clientWidth - physicalWidth * scale) / 2) + 'px';
     canvas.style.top = ((screen.clientHeight - physicalHeight * scale) / 2) + 'px';
   };
-  new ResizeObserver(scaleCanvas).observe(screen);
-  scaleCanvas();
+  // Wait until SDL2 has initialized its 320x170 backing buffer: applying
+  // a transform too early makes Emscripten adopt the scaled CSS dimensions.
+  const startDisplayScaling = () => {
+    new ResizeObserver(scaleCanvas).observe(screen);
+    scaleCanvas();
+  };
 
   // One simulator can share the existing HarbourOS Emscripten bundle.
   // Resolution is fixed to the physical Cardputer Zero LCD: 320 x 170.
@@ -223,6 +227,7 @@
     }],
     onRuntimeInitialized() {
       document.getElementById('status').textContent = '';
+      setTimeout(startDisplayScaling, 250);
       const sync = () => Module.FS.syncfs(false, () => {});
       setInterval(sync, 3000);
       addEventListener('pagehide', sync);
