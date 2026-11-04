@@ -328,12 +328,7 @@ impl Desktop {
             let ly = cy + ICON_SIZE as i32 + 3;
             if selected {
                 c.set_draw_color(ink);
-                let _ = c.fill_rect(Rect::new(
-                    lx - 3,
-                    ly - 1,
-                    (label_w + 6) as u32,
-                    15,
-                ));
+                let _ = c.fill_rect(Rect::new(lx - 3, ly - 1, (label_w + 6) as u32, 15));
             }
             font.draw_text(c, lx, ly, app.label, if selected { paper } else { ink });
         }
