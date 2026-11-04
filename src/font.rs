@@ -335,7 +335,6 @@ mod system_font_tests {
     }
 }
 
-
 // Include the M+ font
 mod mplus_f12r {
     include!("mplus_f12r.rs");
