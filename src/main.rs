@@ -895,7 +895,11 @@ fn app_close_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
 
 /// アイコンの画面上の矩形（アニメ起点）。簡易: グリッド位置から計算。
 fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rect {
-    let compact = screen_w <= 360;
+    if screen_w <= 360 {
+        // Match the index row rather than animating from an obsolete icon grid.
+        return Rect::new(FRAME_MARGIN + 4, topbar_h + 22 + idx as i32 * 18, 133, 17);
+    }
+    let compact = false;
     let cell_w = if compact { 92i32 } else { 72i32 };
     let cell_h = if compact { 54i32 } else { 56i32 };
     let icon_size = if compact { 24u32 } else { 32u32 };
