@@ -49,16 +49,22 @@
     position: relative;
   }
   /* The actual 320x170 Emscripten SDL2 canvas, not a mock screenshot. */
+  /* SDL controls the off-screen, native-resolution buffer. CSS never
+     transforms this canvas: SDL2 otherwise adopts the scaled dimensions. */
   #canvas {
-    display: block;
-    position: absolute;
+    position: fixed;
     top: 0;
-    left: 0;
+    left: -500px;
     width: 320px !important;
     height: 170px !important;
-    transform-origin: top left;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #display {
+    display: block;
+    width: 100%;
+    height: 100%;
     image-rendering: pixelated;
-    image-rendering: crisp-edges;
     touch-action: none;
   }
   #status {
@@ -173,7 +179,7 @@
   <div class="upper">
     <div class="left-space"></div>
     <div class="screen">
-      <canvas id="canvas" width="320" height="170" tabindex="-1" aria-label="HarbourOS screen" oncontextmenu="event.preventDefault()"></canvas>
+      <canvas id="display" width="320" height="170" aria-label="HarbourOS screen" oncontextmenu="event.preventDefault()"></canvas>
       <div id="status" aria-live="polite">LOADING HARBOUR OS…</div>
     </div>
     <div class="controls">
@@ -186,28 +192,46 @@
   </div>
   <div class="keyboard" id="keyboard" aria-label="Interactive keyboard"></div>
 </div>
+<!-- SDL canvas stays at native pixel size, separate from the scaled screen. -->
+<canvas id="canvas" width="320" height="170" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
 <script>
-  // Keep SDL at precisely 320x170; only visually scale the rendered canvas
-  // into the chassis cutout. This prevents SDL2 from using CSS dimensions
-  // as its backing resolution on Chromium and mobile browsers.
+  // Copy SDL's true 320x170 render buffer into a CSS-scaled presentation
+  // canvas. The DOM transform cannot affect the SDL2 window dimensions.
   const physicalWidth = 320;
   const physicalHeight = 170;
-  const screen = document.querySelector('.screen');
-  const canvas = document.getElementById('canvas');
-  const scaleCanvas = () => {
-    const scale = Math.min(screen.clientWidth / physicalWidth,
-      screen.clientHeight / physicalHeight);
-    canvas.style.transform = 'scale(' + scale + ')';
-    canvas.style.left = ((screen.clientWidth - physicalWidth * scale) / 2) + 'px';
-    canvas.style.top = ((screen.clientHeight - physicalHeight * scale) / 2) + 'px';
-  };
-  // Wait until SDL2 has initialized its 320x170 backing buffer: applying
-  // a transform too early makes Emscripten adopt the scaled CSS dimensions.
-  const startDisplayScaling = () => {
-    new ResizeObserver(scaleCanvas).observe(screen);
-    scaleCanvas();
-  };
+  const sourceCanvas = document.getElementById('canvas');
+  const displayCanvas = document.getElementById('display');
+  const displayContext = displayCanvas.getContext('2d', {alpha: false});
+  displayContext.imageSmoothingEnabled = false;
 
+  function mirrorFrame() {
+    if (sourceCanvas.width && sourceCanvas.height) {
+      displayContext.drawImage(sourceCanvas, 0, 0, physicalWidth, physicalHeight);
+    }
+    requestAnimationFrame(mirrorFrame);
+  }
+  const startDisplayScaling = () => requestAnimationFrame(mirrorFrame);
+
+  // Forward pointer input in screen coordinates to the fixed SDL canvas.
+  // The on-screen enclosure remains a transparent presentation surface.
+  function forwardPointer(type, event) {
+    const rect = displayCanvas.getBoundingClientRect();
+    const src = sourceCanvas.getBoundingClientRect();
+    const mx = ((event.clientX - rect.left) / rect.width) * physicalWidth;
+    const my = ((event.clientY - rect.top) / rect.height) * physicalHeight;
+    sourceCanvas.dispatchEvent(new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      clientX: src.left + mx,
+      clientY: src.top + my,
+      button: 0,
+      buttons: type === 'mouseup' ? 0 : (event.buttons || 0),
+      view: window
+    }));
+  }
+  for (const type of ['mousemove', 'mousedown', 'mouseup']) {
+    displayCanvas.addEventListener(type, event => forwardPointer(type, event));
+  }
   // One simulator can share the existing HarbourOS Emscripten bundle.
   // Resolution is fixed to the physical Cardputer Zero LCD: 320 x 170.
   var Module = {
