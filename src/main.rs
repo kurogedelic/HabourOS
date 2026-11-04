@@ -907,7 +907,12 @@ fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rec
     let row = (idx / cols) as i32;
     let cx = grid_x + col * cell_w;
     let cy = grid_y + row * cell_h;
-    Rect::new(cx + (cell_w - icon_size as i32) / 2, cy, icon_size, icon_size)
+    Rect::new(
+        cx + (cell_w - icon_size as i32) / 2,
+        cy,
+        icon_size,
+        icon_size,
+    )
 }
 
 fn closing_to_desktop(
@@ -949,7 +954,9 @@ fn draw_app_window(
     let amber = tm.get_color("foreground");
     let muted = tm.get_color("muted");
 
-    let (screen_w, screen_h) = canvas.output_size().unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
+    let (screen_w, screen_h) = canvas
+        .output_size()
+        .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
     if compact_screen(screen_w, screen_h) {
         // Classic Macintosh proportions: single-pixel window frame,
         // 1px title stripes, a centered title and a square close box.
@@ -962,13 +969,32 @@ fn draw_app_window(
         let title_w = fs.measure_text(&title);
         let title_x = (rect.x() + (rect.width() as i32 - title_w) / 2).max(rect.x() + 20);
         for offset in [3, 5, 7, 9, 11] {
-            harbour_shell::ui::line(canvas, rect.x() + 19, rect.y() + offset, right - 4, rect.y() + offset, amber);
+            harbour_shell::ui::line(
+                canvas,
+                rect.x() + 19,
+                rect.y() + offset,
+                right - 4,
+                rect.y() + offset,
+                amber,
+            );
         }
         canvas.set_draw_color(paper);
-        let _ = canvas.fill_rect(Rect::new(title_x - 4, rect.y() + 1, (title_w + 8).max(1) as u32, 13));
+        let _ = canvas.fill_rect(Rect::new(
+            title_x - 4,
+            rect.y() + 1,
+            (title_w + 8).max(1) as u32,
+            13,
+        ));
         fs.draw_text(canvas, title_x, rect.y() + 1, &title, amber);
         harbour_shell::ui::draw_rect(canvas, Rect::new(rect.x() + 5, rect.y() + 3, 10, 10), amber);
-        harbour_shell::ui::line(canvas, rect.x() + 1, rect.y() + TITLEBAR_H, right, rect.y() + TITLEBAR_H, amber);
+        harbour_shell::ui::line(
+            canvas,
+            rect.x() + 1,
+            rect.y() + TITLEBAR_H,
+            right,
+            rect.y() + TITLEBAR_H,
+            amber,
+        );
         return;
     }
 
