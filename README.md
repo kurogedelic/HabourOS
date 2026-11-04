@@ -77,8 +77,9 @@ python3 -m http.server 8080 --directory web
 ## Cardputer Zero (experimental)
 
 The Linux/AArch64 Cardputer Zero is an experimental target. A 320x170
-launcher, native-resolution Macintosh-style layout, and an ARM64 release-bundle
-workflow are available, but physical hardware support has not been verified. See [Cardputer Zero setup and
+launcher, native-resolution Macintosh-inspired layout with the original amber
+palette, and an ARM64 release-bundle workflow are available, but physical hardware
+support has not been verified. See [Cardputer Zero setup and
 limitations](docs/cardputer-zero.md).
 
 ## Virtual Filesystem
