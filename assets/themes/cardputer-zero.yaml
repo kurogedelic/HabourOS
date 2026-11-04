@@ -1,0 +1,27 @@
+# Cardputer Zero — warm, paper-like Classic Mac desktop.
+# Four amber tones, from dark ink to light window paper.
+# The regular PC/3D UI retains assets/themes/default.yaml.
+name: cardputer-zero
+colors:
+  palette:
+    - "#382209"   # ink / selected background
+    - "#B8945C"   # separators / inactive chrome
+    - "#F0D6A0"   # desktop
+    - "#FFE8B8"   # window and menu paper
+  background: "#F0D6A0"
+  foreground: "#382209"
+  primary: "#382209"
+  secondary: "#B8945C"
+  accent: "#382209"
+  muted: "#B8945C"
+  highlight: "#382209"
+  shadow: "#B8945C"
+  topbar_bg: "#FFE8B8"
+  widget_face: "#FFE8B8"
+  widget_face_active: "#FFE8B8"
+  widget_outline: "#382209"
+  widget_outline_dim: "#B8945C"
+  widget_highlight: "#FFE8B8"
+  widget_shadow: "#B8945C"
+  titlebar_stripe_a: "#B8945C"
+  titlebar_stripe_b: "#FFE8B8"

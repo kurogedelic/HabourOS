@@ -74,6 +74,16 @@ python3 -m http.server 8080 --directory web
 - The VFS snapshot is stored in IndexedDB (`/persist/harbour_vfs.yaml`).
 - `?w=800&h=320` changes the OS resolution (default 640x320, a wide 2:1 screen).
 
+## Cardputer Zero (experimental)
+
+The Linux/AArch64 Cardputer Zero is an experimental target. A 320x170
+launcher, native-resolution Classic Mac-inspired desktop (pale amber background,
+right-aligned 2×3 icon grid and dark amber text), and an ARM64 release-bundle workflow
+are available, but physical hardware support has not been verified. The separate
+[flat Cardputer Zero simulator](web/cardputer-zero.html) runs the same WASM
+binary in the supplied 46-key enclosure at native 320×170. See
+[Cardputer Zero setup and limitations](docs/cardputer-zero.md).
+
 ## Virtual Filesystem
 
 The VFS is an in-memory Unix-style tree persisted as a YAML snapshot. By default,

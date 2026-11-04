@@ -25,8 +25,9 @@ impl<'r> Seashore<'r> {
         println!("Loaded M+ F12R font");
 
         // テーマをロード
-        let theme =
-            Theme::load_from_yaml("assets/themes/default.yaml").expect("Failed to load theme");
+        let theme_path = std::env::var("HARBOUR_THEME")
+            .unwrap_or_else(|_| "assets/themes/default.yaml".to_string());
+        let theme = Theme::load_from_yaml(&theme_path).expect("Failed to load theme");
         println!("Loaded theme: {}", theme.name);
 
         let theme_manager = ThemeManager::new(theme);
@@ -62,25 +63,32 @@ impl<'r> Seashore<'r> {
     /// トップメニューバーを描画。戻り値はバーの高さ（下端 y 座標）。
     /// 方針: Black 背景 + Amber outline/文字/アイコン。fill は使わない。
     pub fn draw_top_bar(&mut self, c: &mut Canvas<Window>, os: &HarbourOS) -> i32 {
+        let ink = self.theme.get_color("foreground");
+        let background = self.theme.get_color("background");
+        let (w, h) = c.output_size().unwrap_or((WINDOW_WIDTH, 0));
+
+        if w <= 360 && h <= 200 {
+            // System 6/7-inspired 16 px menu strip: light paper, dark ink.
+            // Never show fictitious battery or network status.
+            const BAR_H: i32 = 16;
+            let paper = self.theme.get_color("topbar_bg");
+            c.set_draw_color(paper);
+            let _ = c.fill_rect(Rect::new(0, 0, w, BAR_H as u32));
+            crate::ui::line(c, 0, BAR_H - 1, w as i32 - 1, BAR_H - 1, ink);
+            self.font_system.draw_text(c, 6, 1, "Harbour", ink);
+            self.font_system.draw_text(c, 61, 1, "File", ink);
+            self.font_system.draw_text(c, 97, 1, "View", ink);
+            let clock = os.system_time.get(..5).unwrap_or(&os.system_time);
+            let clock_x = (w as i32 - self.font_system.measure_text(clock) - 7).max(0);
+            self.font_system.draw_text(c, clock_x, 1, clock, ink);
+            return BAR_H;
+        }
+
         let bar_height = 20i32;
-        let amber = self.theme.get_color("foreground");
-        let black = self.theme.get_color("background");
-
-        // バー幅は実際の出力サイズに追従
-        let (w, _) = c.output_size().unwrap_or((WINDOW_WIDTH, 0));
-
-        // 1) バー領域の背景（fill はバー地のみ例外的に黒で塗る＝背景と同色なので実質不可視）
-        let _ = c.set_draw_color(black);
-
-        // 2) バー下端の区切り線（Amber outline 1px）
-        crate::ui::line(c, 0, bar_height, w as i32 - 1, bar_height, amber);
-
-        // 3) 時刻を左端に表示（Amber）
-        os.draw_topbar_clock(c, &self.font_system, amber);
-
-        // 4) ステータスアイコンを右詰めで表示（PNG アセット、Amber 染色）
+        c.set_draw_color(background);
+        crate::ui::line(c, 0, bar_height, w as i32 - 1, bar_height, ink);
+        os.draw_topbar_clock(c, &self.font_system, ink);
         self.draw_status_icons(c, w as i32);
-
         bar_height
     }
 

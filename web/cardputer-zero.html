@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cardputer Zero — HarbourOS Simulator</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #f5f5f5;
+    font-family: Arial, sans-serif;
+    overscroll-behavior: none;
+  }
+  .device {
+    width: min(94vw, 720px);
+    aspect-ratio: 84 / 54;
+    background: #dededb;
+    border: 2px solid #a5a5a3;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    container-type: inline-size;
+  }
+  .upper {
+    height: 46%;
+    display: flex;
+    align-items: center;
+    gap: 3%;
+    padding: 3%;
+    justify-content: space-between;
+  }
+  .left-space { width: 15%; flex-shrink: 0; }
+  .screen {
+    flex: 0 1 auto;
+    width: auto;
+    height: 100%;
+    min-width: 0;
+    max-width: 100%;
+    aspect-ratio: 320 / 170;
+    background: #000000;
+    border: 4px solid #44494b;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  /* The actual 320x170 Emscripten SDL2 canvas, not a mock screenshot. */
+  /* SDL controls the off-screen, native-resolution buffer. CSS never
+     transforms this canvas: SDL2 otherwise adopts the scaled dimensions. */
+  #canvas {
+    position: fixed;
+    top: 0;
+    left: -500px;
+    width: 320px !important;
+    height: 170px !important;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #display {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    touch-action: none;
+  }
+  #status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 8px;
+    background: #000;
+    color: #ffb040;
+    font: 10px/1.4 monospace;
+    text-align: center;
+    pointer-events: none;
+  }
+  #status:empty { display: none; }
+  .controls {
+    width: 15%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .power {
+    width: 42%;
+    height: 12%;
+    background: #dd745f;
+    border: 0;
+    border-radius: 3px;
+    padding: 0;
+    cursor: pointer;
+  }
+  .nav-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+  }
+  .nav-button {
+    width: 29%;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: 50%;
+    background: #747b7b;
+    cursor: pointer;
+    color: #fff;
+    font-size: 1.8cqw;
+    display: grid;
+    place-items: center;
+    padding: 0;
+  }
+  .keyboard {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2%;
+    padding: 1.5% 2.5% 2.5%;
+  }
+  .key-row { display: flex; flex: 1; min-height: 0; gap: 0.5%; }
+  .key {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .legend {
+    width: 100%;
+    height: 40%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3%;
+    color: #343a40;
+    font-size: 1.85cqw;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .legend.special { color: #c66c4c; }
+  .secondary {
+    font-size: 1.2cqw;
+    font-weight: 600;
+    color: #43839e;
+  }
+  .keycap {
+    width: 82%;
+    height: 44%;
+    background: #303638;
+    border-radius: 999px;
+  }
+  .key.pressed .keycap, .key.sticky .keycap { background: #c66c4c; }
+  .key:focus-visible, .power:focus-visible, .nav-button:focus-visible {
+    outline: 2px solid #43839e;
+    outline-offset: 1px;
+  }
+  @media (max-width: 440px) {
+    .device { width: 98vw; border-radius: 6px; }
+    .screen { border-width: 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="device" aria-label="Cardputer Zero flat simulator">
+  <div class="upper">
+    <div class="left-space"></div>
+    <div class="screen">
+      <canvas id="display" width="320" height="170" aria-label="HarbourOS screen" oncontextmenu="event.preventDefault()"></canvas>
+      <div id="status" aria-live="polite">LOADING HARBOUR OS…</div>
+    </div>
+    <div class="controls">
+      <button class="power" type="button" id="restart" title="Restart simulator" aria-label="Restart simulator"></button>
+      <div class="nav-buttons">
+        <button class="nav-button" type="button" data-key="ArrowLeft" aria-label="Move left">‹</button>
+        <button class="nav-button" type="button" data-key="ArrowRight" aria-label="Move right">›</button>
+      </div>
+    </div>
+  </div>
+  <div class="keyboard" id="keyboard" aria-label="Interactive keyboard"></div>
+</div>
+<!-- SDL canvas stays at native pixel size, separate from the scaled screen. -->
+<canvas id="canvas" width="320" height="170" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+<script>
+  // Copy SDL's true 320x170 render buffer into a CSS-scaled presentation
+  // canvas. The DOM transform cannot affect the SDL2 window dimensions.
+  const physicalWidth = 320;
+  const physicalHeight = 170;
+  const sourceCanvas = document.getElementById('canvas');
+  const displayCanvas = document.getElementById('display');
+  const displayContext = displayCanvas.getContext('2d', {alpha: false});
+  displayContext.imageSmoothingEnabled = false;
+
+  function mirrorFrame() {
+    if (sourceCanvas.width && sourceCanvas.height) {
+      displayContext.drawImage(sourceCanvas, 0, 0, physicalWidth, physicalHeight);
+    }
+    requestAnimationFrame(mirrorFrame);
+  }
+  const startDisplayScaling = () => requestAnimationFrame(mirrorFrame);
+
+  // Forward pointer input in screen coordinates to the fixed SDL canvas.
+  // The on-screen enclosure remains a transparent presentation surface.
+  function forwardPointer(type, event) {
+    const rect = displayCanvas.getBoundingClientRect();
+    const src = sourceCanvas.getBoundingClientRect();
+    const mx = ((event.clientX - rect.left) / rect.width) * physicalWidth;
+    const my = ((event.clientY - rect.top) / rect.height) * physicalHeight;
+    sourceCanvas.dispatchEvent(new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      clientX: src.left + mx,
+      clientY: src.top + my,
+      button: 0,
+      buttons: type === 'mouseup' ? 0 : (event.buttons || 0),
+      view: window
+    }));
+  }
+  for (const type of ['mousemove', 'mousedown', 'mouseup']) {
+    displayCanvas.addEventListener(type, event => forwardPointer(type, event));
+  }
+  // One simulator can share the existing HarbourOS Emscripten bundle.
+  // Resolution is fixed to the physical Cardputer Zero LCD: 320 x 170.
+  var Module = {
+    canvas: document.getElementById('canvas'),
+    osSize: [320, 170],
+    preRun: [() => {
+      const FS = Module.FS;
+      const IDB = typeof IDBFS !== 'undefined' ? IDBFS : FS.filesystems.IDBFS;
+      FS.mkdir('/persist');
+      FS.mount(IDB, {}, '/persist');
+      Module.addRunDependency('idbfs');
+      FS.syncfs(true, () => Module.removeRunDependency('idbfs'));
+      Module.ENV.HARBOUR_VFS_PATH = '/persist/harbour_vfs.yaml';
+      Module.ENV.HARBOUR_WIDTH = '320';
+      Module.ENV.HARBOUR_HEIGHT = '170';
+      Module.ENV.HARBOUR_THEME = 'assets/themes/cardputer-zero.yaml';
+    }],
+    onRuntimeInitialized() {
+      document.getElementById('status').textContent = '';
+      setTimeout(startDisplayScaling, 250);
+      const sync = () => Module.FS.syncfs(false, () => {});
+      setInterval(sync, 3000);
+      addEventListener('pagehide', sync);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') sync();
+      });
+    },
+    onAbort(what) {
+      document.getElementById('status').textContent = 'STARTUP FAILED: ' + what;
+    },
+    print: (t) => console.log(t),
+    printErr: (t) => console.warn(t),
+  };
+</script>
+<script src="harbour_shell.js"></script>
+<script src="cardputer-zero.js" defer></script>
+</body>
+</html>

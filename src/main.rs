@@ -96,7 +96,9 @@ fn main() -> Result<(), String> {
     }
 
     // テーマ
-    let theme = Theme::load_from_yaml("assets/themes/default.yaml")?;
+    let theme_path =
+        std::env::var("HARBOUR_THEME").unwrap_or_else(|_| "assets/themes/default.yaml".to_string());
+    let theme = Theme::load_from_yaml(&theme_path)?;
     let tm = ThemeManager::new(theme);
 
     // Seashore（topbar + アセット）
@@ -277,7 +279,10 @@ fn main() -> Result<(), String> {
                                 let (out_w, out_h) = canvas
                                     .output_size()
                                     .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
-                                desktop.set_view(out_w, out_h.saturating_sub(TOPBAR_H as u32));
+                                desktop.set_view(
+                                    out_w,
+                                    out_h.saturating_sub(topbar_height(out_w, out_h) as u32),
+                                );
                                 let from = icon_rect(&desktop, desktop.selected, out_w, TOPBAR_H);
                                 let to = app_window_rect(&canvas);
                                 mode = Mode::Opening {
@@ -547,7 +552,10 @@ fn main() -> Result<(), String> {
             .output_size()
             .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
         os.clamp_pointer(out_w, out_h);
-        desktop.set_view(out_w, out_h.saturating_sub(TOPBAR_H as u32));
+        desktop.set_view(
+            out_w,
+            out_h.saturating_sub(topbar_height(out_w, out_h) as u32),
+        );
         let bg = tm.get_color("background");
         canvas.set_draw_color(Color::RGB(bg.r, bg.g, bg.b));
         canvas.clear();
@@ -754,8 +762,10 @@ fn main() -> Result<(), String> {
             }
         }
 
-        let pointer = os.pointer();
-        draw_pointer(&mut canvas, &tm, pointer.x, pointer.y);
+        if !compact_screen(out_w, out_h) {
+            let pointer = os.pointer();
+            draw_pointer(&mut canvas, &tm, pointer.x, pointer.y);
+        }
 
         canvas.present();
         sdl.mouse().show_cursor(false);
@@ -811,10 +821,17 @@ fn handle_pointer_input(
             let (out_w, out_h) = canvas
                 .output_size()
                 .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
-            desktop.set_view(out_w, out_h.saturating_sub(TOPBAR_H as u32));
-            if let DesktopAction::Launch(kind) =
-                desktop.handle_pointer(input, FRAME_MARGIN, TOPBAR_H, out_w, out_h)
-            {
+            desktop.set_view(
+                out_w,
+                out_h.saturating_sub(topbar_height(out_w, out_h) as u32),
+            );
+            if let DesktopAction::Launch(kind) = desktop.handle_pointer(
+                input,
+                FRAME_MARGIN,
+                topbar_height(out_w, out_h),
+                out_w,
+                out_h,
+            ) {
                 *mode = opening_from_desktop(canvas, desktop, kind);
             }
         }
@@ -889,8 +906,24 @@ fn app_close_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
     Rect::new(rect.x() + 4, rect.y() + 3, 10, 10)
 }
 
-/// アイコンの画面上の矩形（アニメ起点）。簡易: グリッド位置から計算。
+/// Start/end rectangle for app open/close transitions.
+/// Matches Desktop::layout for both the compact and the PC view.
 fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rect {
+    if screen_w <= 360 {
+        let cell_w = 68i32;
+        let cell_h = 46i32;
+        let grid_x = FRAME_MARGIN + (screen_w as i32 - 2 * cell_w - 10).max(0);
+        let grid_y = 16 + 8;
+        let col = (idx % 2) as i32;
+        let row = (idx / 2) as i32;
+        return Rect::new(
+            grid_x + col * cell_w + (cell_w - 20) / 2,
+            grid_y + row * cell_h,
+            20,
+            20,
+        );
+    }
+
     let cell_w = 72i32;
     let cell_h = 56i32;
     let cols = desktop.cols.max(1);
@@ -899,9 +932,12 @@ fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rec
     let grid_y = topbar_h + 24;
     let col = (idx % cols) as i32;
     let row = (idx / cols) as i32;
-    let cx = grid_x + col * cell_w;
-    let cy = grid_y + row * cell_h;
-    Rect::new(cx + (cell_w - 32) / 2, cy, 32, 32)
+    Rect::new(
+        grid_x + col * cell_w + (cell_w - 32) / 2,
+        grid_y + row * cell_h,
+        32,
+        32,
+    )
 }
 
 fn closing_to_desktop(
@@ -923,11 +959,12 @@ fn app_window_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
     let (w, h) = canvas
         .output_size()
         .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
+    let bar_h = topbar_height(w, h);
     Rect::new(
         FRAME_MARGIN,
-        TOPBAR_H + FRAME_MARGIN,
+        bar_h + FRAME_MARGIN,
         w.saturating_sub(FRAME_MARGIN as u32 * 2),
-        h.saturating_sub(TOPBAR_H as u32)
+        h.saturating_sub(bar_h as u32)
             .saturating_sub(FRAME_MARGIN as u32 * 2),
     )
 }
@@ -942,6 +979,51 @@ fn draw_app_window(
 ) {
     let amber = tm.get_color("foreground");
     let muted = tm.get_color("muted");
+
+    let (screen_w, screen_h) = canvas
+        .output_size()
+        .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
+    if compact_screen(screen_w, screen_h) {
+        // Slim Macintosh-inspired frame. The title stripe is subdued, not
+        // a broad high-contrast block on a 320x170 screen.
+        let ink = tm.get_color("muted");
+        let paper = tm.get_color("widget_face_active");
+        canvas.set_draw_color(paper);
+        let _ = canvas.fill_rect(*rect);
+        harbour_shell::ui::draw_rect(canvas, *rect, ink);
+        let right = rect.x() + rect.width() as i32 - 2;
+        let title = fit_text(fs, title, rect.width() as i32 - 55);
+        let title_w = fs.measure_text(&title);
+        let title_x = (rect.x() + (rect.width() as i32 - title_w) / 2).max(rect.x() + 20);
+        for offset in [4, 7, 10] {
+            harbour_shell::ui::line(
+                canvas,
+                rect.x() + 19,
+                rect.y() + offset,
+                right - 4,
+                rect.y() + offset,
+                ink,
+            );
+        }
+        canvas.set_draw_color(paper);
+        let _ = canvas.fill_rect(Rect::new(
+            title_x - 4,
+            rect.y() + 1,
+            (title_w + 8).max(1) as u32,
+            13,
+        ));
+        fs.draw_text(canvas, title_x, rect.y() + 1, &title, amber);
+        harbour_shell::ui::draw_rect(canvas, Rect::new(rect.x() + 6, rect.y() + 4, 8, 8), amber);
+        harbour_shell::ui::line(
+            canvas,
+            rect.x() + 1,
+            rect.y() + TITLEBAR_H,
+            right,
+            rect.y() + TITLEBAR_H,
+            ink,
+        );
+        return;
+    }
 
     // 外枠は全アプリ共通の2px罫線。
     harbour_shell::ui::draw_rect_thick(canvas, *rect, amber);
@@ -1076,6 +1158,18 @@ fn frame_wait() {
         fn emscripten_sleep(ms: u32);
     }
     unsafe { emscripten_sleep(16) };
+}
+
+fn topbar_height(w: u32, h: u32) -> i32 {
+    if compact_screen(w, h) {
+        16
+    } else {
+        TOPBAR_H
+    }
+}
+
+fn compact_screen(w: u32, h: u32) -> bool {
+    w <= 360 && h <= 200
 }
 
 fn env_u32(name: &str) -> Option<u32> {
