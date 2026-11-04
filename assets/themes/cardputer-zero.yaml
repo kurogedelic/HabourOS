@@ -1,13 +1,26 @@
-# Cardputer Zero: flat, low-glare, keyboard-first palette.
-# Separate from the desktop's retro amber default.
+# Cardputer Zero: warm monochrome inspired by early Macintosh UI.
+# Use explicit semantic tones: dark text on a light desktop.
 name: cardputer-zero
 colors:
   palette:
-    - "#101512" # background
-    - "#26312A" # low-contrast surfaces
-    - "#839388" # muted
-    - "#E2EBDB" # text
-  accent: "#D0EC85"
-  highlight: "#D0EC85"
-  widget_outline: "#566559"
-  widget_outline_dim: "#26312A"
+    - "#E9E8DF" # desktop background
+    - "#C4C6BB" # shadow
+    - "#72746B" # secondary text
+    - "#20221F" # foreground
+  background: "#E9E8DF"
+  foreground: "#20221F"
+  primary: "#20221F"
+  secondary: "#72746B"
+  accent: "#20221F"
+  muted: "#72746B"
+  highlight: "#20221F"
+  shadow: "#C4C6BB"
+  topbar_bg: "#F6F5EC"
+  widget_face: "#E9E8DF"
+  widget_face_active: "#F6F5EC"
+  widget_outline: "#20221F"
+  widget_outline_dim: "#C4C6BB"
+  widget_highlight: "#F6F5EC"
+  widget_shadow: "#72746B"
+  titlebar_stripe_a: "#20221F"
+  titlebar_stripe_b: "#E9E8DF"
