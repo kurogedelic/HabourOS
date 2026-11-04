@@ -26,6 +26,7 @@ export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-wayland}"
 export HARBOUR_WIDTH="${HARBOUR_WIDTH:-320}"
 export HARBOUR_HEIGHT="${HARBOUR_HEIGHT:-170}"
 export HARBOUR_FULLSCREEN="${HARBOUR_FULLSCREEN:-1}"
+export HARBOUR_THEME="${HARBOUR_THEME:-assets/themes/cardputer-zero.yaml}"
 
 if [[ "$SDL_VIDEODRIVER" == "wayland" && -z "${WAYLAND_DISPLAY:-}" ]]; then
   echo "Warning: WAYLAND_DISPLAY is not set; a running Wayland session is required." >&2
