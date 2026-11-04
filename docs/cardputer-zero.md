@@ -11,9 +11,12 @@
 - LCD: **320 × 170**, no touch; keyboard: **46 keys**.
 - HarbourOS remains an **SDL2 application**. All existing built-in apps, VFS,
   drawing and rendering stay in Rust, without a separate GUI implementation.
-- Compact UI: Classic Macintosh-inspired light monochrome theme, a 20px menu
-  bar, three columns of desktop icons over two rows, inverse icon selection
-  and striped window title bars. There is no bitmap scaling.
+- Compact UI: the original HarbourOS **four-step amber** palette
+  (`#000000`, `#3a2108`, `#9a5a12`, `#ffb040`), a restrained Macintosh-style
+  menu strip, and a native 320×170 three-by-two icon grid with 24px icons.
+  Selection uses a one-pixel icon outline and inverse label, and app windows
+  use minimal amber title stripes. Window transitions are two frames; there
+  is no bitmap scaling.
 - The handheld launcher selects `assets/themes/cardputer-zero.yaml` via
   `HARBOUR_THEME`, keeping the desktop default theme unchanged.
 - Initial goal: launch the desktop and navigate to one app using the built-in
