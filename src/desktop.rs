@@ -338,14 +338,14 @@ impl Desktop {
         let cols = self.cols.max(1);
         let compact = compact_display(w, h);
         let cell_w = if compact { 68i32 } else { 72i32 };
-        let cell_h = if compact { 51i32 } else { 56i32 };
+        let cell_h = if compact { 50i32 } else { 56i32 };
         let grid_w = (cols as i32 * cell_w).min(w as i32);
         let grid_x = if compact {
             x + (w as i32 - grid_w - 10).max(0)
         } else {
             x + ((w as i32 - grid_w) / 2).max(8)
         };
-        let grid_y = y + if compact { 0 } else { 24 };
+        let grid_y = y + if compact { 2 } else { 24 };
         DesktopLayout {
             cols,
             cell_w,
@@ -393,7 +393,7 @@ mod tests {
         assert_eq!(desktop.apps.len(), 6);
         let layout = desktop.layout(2, 16, 320, 170);
         assert_eq!(layout.grid_x, 176);
-        assert_eq!(layout.grid_y, 16);
+        assert_eq!(layout.grid_y, 18);
         assert_eq!(layout.cell_origin(5), (244, 118));
         // Last label fits beneath the third icon row.
         assert!(layout.cell_origin(5).1 + 24 + 1 + 13 * 2 <= 170);
