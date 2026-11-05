@@ -1048,7 +1048,11 @@ fn app_window_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
 
 fn app_rect_for_size(w: u32, h: u32) -> Rect {
     let bar_h = topbar_height(w, h);
-    let margin = if compact_screen(w, h) { 0 } else { FRAME_MARGIN };
+    let margin = if compact_screen(w, h) {
+        0
+    } else {
+        FRAME_MARGIN
+    };
     Rect::new(
         margin,
         bar_h + margin,
