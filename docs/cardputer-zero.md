@@ -18,8 +18,19 @@
   assets are arranged on the right in two columns by three rows.
   The selected label inverts to dark ink with light lettering; the left side
   remains a usable, uncluttered workspace. App windows retain a thin Mac-style
-  frame. Icons and fonts are drawn pixel-sharp without bitmap scaling.
-  Press Enter to open the selected icon, or use 1–6 for direct launches.
+  frame. On this small screen, app frames fill the width and every pixel
+  below the 16px menu strip (no outer margin). Icons and fonts are drawn
+  pixel-sharp without bitmap scaling. Press Enter to open the selected icon,
+  or use 1–6 for direct launches. The system menu begins with an original
+  12×12 pixel Harbour anchor mark.
+- Compact pointer: an external USB mouse works through SDL2. The on-screen
+  12×16 pointing arrow is shown on first mouse interaction. Without a mouse,
+  press **Ctrl+M** to toggle pointer mode, use **W/A/S/D** (or arrows)
+  to move 5 pixels per keypress, **Enter / Space** to click, and **Esc**
+  to return to ordinary keyboard operation. The pointer is separate from
+  the normal desktop icon-selection navigation; text input is unchanged
+  unless pointer mode is explicitly enabled. Physical USB Host input is
+  unverified on an actual Cardputer Zero.
 - System typography: compact menus and window titles use a chunky,
   proportionally spaced **Chicago-inspired** treatment of HarbourOS's
   existing M+ bitmap glyphs (1px heavier strokes). Icon captions, application
