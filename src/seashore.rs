@@ -75,8 +75,9 @@ impl<'r> Seashore<'r> {
             c.set_draw_color(paper);
             let _ = c.fill_rect(Rect::new(0, 0, w, BAR_H as u32));
             crate::ui::line(c, 0, BAR_H - 1, w as i32 - 1, BAR_H - 1, ink);
-            // A 12px monochrome Harbour emblem occupies the system-menu slot.
-            draw_harbour_menu_mark(c, 4, 2, ink);
+            // The anchor has more visual weight at its base, so place the
+            // 12px bitmap 2px above geometric center (optical centering).
+            draw_harbour_menu_mark(c, 4, 0, ink);
             let mut menu_x = 22;
             for (index, menu) in ["Harbour", "File", "View"].iter().enumerate() {
                 self.font_system.draw_system_text(c, menu_x, 1, menu, ink);
