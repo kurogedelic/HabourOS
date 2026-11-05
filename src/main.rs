@@ -910,12 +910,12 @@ fn app_close_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
 /// Matches Desktop::layout for both the compact and the PC view.
 fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rect {
     if screen_w <= 360 {
-        let cell_w = 68i32;
-        let cell_h = 50i32;
-        let grid_x = FRAME_MARGIN + (screen_w as i32 - 2 * cell_w - 10).max(0);
-        let grid_y = 18;
-        let col = (idx % 2) as i32;
-        let row = (idx / 2) as i32;
+        let cell_w = 76i32;
+        let cell_h = 70i32;
+        let grid_x = FRAME_MARGIN + (screen_w as i32 - 3 * cell_w - 12).max(0);
+        let grid_y = topbar_h + 12;
+        let col = (idx % 3) as i32;
+        let row = (idx / 3) as i32;
         return Rect::new(
             grid_x + col * cell_w + (cell_w - 24) / 2,
             grid_y + row * cell_h,
