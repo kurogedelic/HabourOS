@@ -271,8 +271,8 @@ impl Desktop {
         }
     }
 
-    /// Cardputer Zero: 24px desktop icons with a 3x2 grid at 320x170.
-    /// Each label has enough room for two lines without touching the next icon.
+    /// Compact Cardputer desktop: closely grouped 3x2 icon grid.
+    /// Classic Mac selection uses a filled icon and inverse video behind the label.
     fn draw_compact(
         &self,
         c: &mut Canvas<Window>,
@@ -285,9 +285,11 @@ impl Desktop {
         h: u32,
     ) {
         let ink = theme.get_color("foreground");
+        let paper = theme.get_color("background");
         let grid = self.layout(x, y, w, h);
         const ICON_SIZE: u32 = 24;
         const LABEL_LINE_HEIGHT: i32 = 13;
+        const LABEL_OFFSET: i32 = 5;
 
         for (i, app) in self.apps.iter().enumerate() {
             let (cx, cy) = grid.cell_origin(i);
@@ -295,26 +297,42 @@ impl Desktop {
             let icon_x = cx + (grid.cell_w - ICON_SIZE as i32) / 2;
             let icon_rect = Rect::new(icon_x, cy, ICON_SIZE, ICON_SIZE);
 
-            // One-pixel focus outline, with no oversized inverted text blocks.
-            if selected {
-                ui::draw_rect(
-                    c,
-                    Rect::new(icon_x - 2, cy - 2, ICON_SIZE + 4, ICON_SIZE + 4),
-                    ink,
-                );
-            }
-            let _ = assets.blit_tinted(c, app.icon, Some(icon_rect), ink);
+            // Selected variants are filled silhouettes with light cutouts,
+            // matching classic Finder icons without a rectangular focus box.
+            let selected_key = format!("{}_selected", app.icon);
+            let icon_key = if selected && assets.get(&selected_key).is_some() {
+                selected_key.as_str()
+            } else {
+                app.icon
+            };
+            let _ = assets.blit_tinted(c, icon_key, Some(icon_rect), ink);
 
-            for (line, label) in ui::wrap_icon_label(
+            let labels = ui::wrap_icon_label(
                 app.label,
-                grid.cell_w - 12,
+                grid.cell_w - 4,
                 |s| font.measure_text(s),
-            ).iter().enumerate() {
+            );
+            if labels.is_empty() {
+                continue;
+            }
+
+            let widest = labels.iter().map(|s| font.measure_text(s)).max().unwrap_or(0);
+            let label_y = cy + ICON_SIZE as i32 + LABEL_OFFSET;
+            if selected {
+                let label_x = cx + (grid.cell_w - widest) / 2;
+                c.set_draw_color(ink);
+                let _ = c.fill_rect(Rect::new(
+                    label_x - 2,
+                    label_y - 2,
+                    (widest + 4) as u32,
+                    (labels.len() as i32 * LABEL_LINE_HEIGHT + 3) as u32,
+                ));
+            }
+            for (line, label) in labels.iter().enumerate() {
                 let label_width = font.measure_text(label);
                 let lx = cx + (grid.cell_w - label_width) / 2;
-                let ly = cy + ICON_SIZE as i32 + 5 + line as i32 * LABEL_LINE_HEIGHT;
-                font.draw_text(c, lx, ly, label, ink);
-
+                let ly = label_y + line as i32 * LABEL_LINE_HEIGHT;
+                font.draw_text(c, lx, ly, label, if selected { paper } else { ink });
             }
         }
     }
@@ -335,15 +353,15 @@ impl Desktop {
     fn layout(&self, x: i32, y: i32, w: u32, h: u32) -> DesktopLayout {
         let cols = self.cols.max(1);
         let compact = compact_display(w, h);
-        let cell_w = if compact { 76i32 } else { 72i32 };
-        let cell_h = if compact { 70i32 } else { 56i32 };
+        let cell_w = if compact { 68i32 } else { 72i32 };
+        let cell_h = if compact { 61i32 } else { 56i32 };
         let grid_w = (cols as i32 * cell_w).min(w as i32);
         let grid_x = if compact {
-            x + (w as i32 - grid_w - 12).max(0)
+            x + ((w as i32 - grid_w) / 2).max(0)
         } else {
             x + ((w as i32 - grid_w) / 2).max(8)
         };
-        let grid_y = y + if compact { 12 } else { 24 };
+        let grid_y = y + if compact { 13 } else { 24 };
         DesktopLayout {
             cols,
             cell_w,
@@ -390,14 +408,14 @@ mod tests {
         assert_eq!(desktop.cols, 3);
         assert_eq!(desktop.apps.len(), 6);
         let layout = desktop.layout(2, 16, 320, 170);
-        assert_eq!(layout.grid_x, 82);
-        assert_eq!(layout.grid_y, 28);
-        assert_eq!(layout.cell_origin(5), (234, 98));
-        // Last label fits beneath the third icon row.
+        assert_eq!(layout.grid_x, 60);
+        assert_eq!(layout.grid_y, 29);
+        assert_eq!(layout.cell_origin(5), (196, 90));
+        // The second row and any two-line label fit the LCD.
         assert!(layout.cell_origin(5).1 + 24 + 5 + 13 * 2 <= 170);
         // Left desktop workspace is not a clickable icon.
-        assert_eq!(desktop.hit_icon(60, 50, 2, 16, 320, 170), None);
-        assert_eq!(desktop.hit_icon(265, 123, 2, 16, 320, 170), Some(5));
+        assert_eq!(desktop.hit_icon(40, 50, 2, 16, 320, 170), None);
+        assert_eq!(desktop.hit_icon(240, 123, 2, 16, 320, 170), Some(5));
     }
 
     #[test]

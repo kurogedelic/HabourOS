@@ -910,11 +910,11 @@ fn app_close_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
 /// Matches Desktop::layout for both the compact and the PC view.
 fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rect {
     if screen_w <= 360 {
-        let cell_w = 76i32;
-        let cell_h = 70i32;
-        let grid_x = FRAME_MARGIN + (screen_w as i32 - 3 * cell_w - 12).max(0);
-        // Compact menubar is 16px, independent of the 20px desktop constant.
-        let grid_y = 28;
+        let cell_w = 68i32;
+        let cell_h = 61i32;
+        let grid_x = FRAME_MARGIN + ((screen_w as i32 - 3 * cell_w) / 2).max(0);
+        // Compact menu bar is 16px. Keep animations aligned with Desktop::layout.
+        let grid_y = 29;
         let col = (idx % 3) as i32;
         let row = (idx / 3) as i32;
         return Rect::new(
