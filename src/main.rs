@@ -913,7 +913,8 @@ fn icon_rect(desktop: &Desktop, idx: usize, screen_w: u32, topbar_h: i32) -> Rec
         let cell_w = 76i32;
         let cell_h = 70i32;
         let grid_x = FRAME_MARGIN + (screen_w as i32 - 3 * cell_w - 12).max(0);
-        let grid_y = topbar_h + 12;
+        // Compact menubar is 16px, independent of the 20px desktop constant.
+        let grid_y = 28;
         let col = (idx % 3) as i32;
         let row = (idx / 3) as i32;
         return Rect::new(
