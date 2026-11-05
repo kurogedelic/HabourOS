@@ -517,7 +517,7 @@ impl FileBrowser {
         ui::line(c, x + 1, y + 14, x + w as i32 - 2, y + 14, amber);
 
         // 2) アイコングリッド
-        let icon_size = 32u32;
+        let icon_size = 24u32;
         let cell_w = 72i32;
         // ヘッダ下 + 余白
         let cols = ((w as i32 - 16) / cell_w).max(1) as usize;
@@ -582,13 +582,12 @@ impl FileBrowser {
             } else {
                 name.clone()
             };
-            let label = fit_label(font, &label, cell_w - 4);
-            let label_w = font.measure_text(&label);
-            let lx = cx + (cell_w - label_w) / 2;
-            let ly = cy + icon_size as i32 + 2;
-            font.draw_text(c, lx, ly, &label, amber);
-            if is_cursor {
-                ui::line(c, lx, ly + 13, lx + label_w, ly + 13, amber);
+            for (line, part) in ui::wrap_icon_label(&label, 52, |s| font.measure_text(s)).iter().enumerate() {
+                let lw = font.measure_text(part);
+                let lx = cx + (cell_w - lw) / 2;
+                let ly = cy + icon_size as i32 + 1 + line as i32 * 13;
+                font.draw_text(c, lx, ly, part, amber);
+                if is_cursor { ui::line(c, lx, ly + 12, lx + lw, ly + 12, amber); }
             }
         }
 
