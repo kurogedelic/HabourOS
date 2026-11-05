@@ -38,9 +38,12 @@
   .screen {
     flex: 0 1 auto;
     width: auto;
-    height: 100%;
+    /* Preserve the actual LCD's 320:170 content ratio. A border-box
+       aspect-ratio distorts the framebuffer because the bezel is included. */
+    box-sizing: content-box;
+    height: calc(100% - 8px);
     min-width: 0;
-    max-width: 100%;
+    max-width: calc(100% - 8px);
     aspect-ratio: 320 / 170;
     background: #000000;
     border: 4px solid #44494b;
@@ -253,7 +256,7 @@
   }
   @media (max-width: 440px) {
     .device { width: 98vw; border-radius: 6px; }
-    .screen { border-width: 2px; }
+    .screen { border-width: 2px; height: calc(100% - 4px); max-width: calc(100% - 4px); }
   }
 </style>
 </head>
@@ -298,18 +301,27 @@
   }
   const startDisplayScaling = () => requestAnimationFrame(mirrorFrame);
 
-  // Forward pointer input in screen coordinates to the fixed SDL canvas.
-  // The on-screen enclosure remains a transparent presentation surface.
+  // SDL2 listens on the hidden native 320x170 canvas. Route each browser
+  // pointer event through its pixel center, using the *visible LCD content*
+  // bounds. This avoids half-pixel drift and bezel-related coordinate shifts
+  // when the enclosure is resized or displayed on a Retina screen.
   function forwardPointer(type, event) {
-    const rect = displayCanvas.getBoundingClientRect();
-    const src = sourceCanvas.getBoundingClientRect();
-    const mx = ((event.clientX - rect.left) / rect.width) * physicalWidth;
-    const my = ((event.clientY - rect.top) / rect.height) * physicalHeight;
+    const visible = displayCanvas.getBoundingClientRect();
+    const native = sourceCanvas.getBoundingClientRect();
+    if (!visible.width || !visible.height || !native.width || !native.height) return;
+
+    const pixelX = Math.max(0, Math.min(physicalWidth - 1,
+      Math.floor((event.clientX - visible.left) * physicalWidth / visible.width)));
+    const pixelY = Math.max(0, Math.min(physicalHeight - 1,
+      Math.floor((event.clientY - visible.top) * physicalHeight / visible.height)));
+
+    // SDL2's Browser.calculateMouseCoords converts this synthetic event back
+    // through the native canvas bounds; address the center of that pixel.
     sourceCanvas.dispatchEvent(new MouseEvent(type, {
       bubbles: true,
       cancelable: true,
-      clientX: src.left + mx,
-      clientY: src.top + my,
+      clientX: native.left + (pixelX + 0.5) * native.width / physicalWidth,
+      clientY: native.top + (pixelY + 0.5) * native.height / physicalHeight,
       button: 0,
       buttons: type === 'mouseup' ? 0 : (event.buttons || 0),
       view: window
@@ -321,6 +333,12 @@
   // One simulator can share the existing HarbourOS Emscripten bundle.
   // Resolution is fixed to the physical Cardputer Zero LCD: 320 x 170.
   var Module = {
+    // Asset URL versioning prevents browsers/CDNs from mixing a newer pointer
+    // renderer with a cached older WASM or SDL data package after deployment.
+    locateFile(name, prefix) {
+      const url = (prefix || '') + name;
+      return name.startsWith('harbour_shell.') ? url + '?v=black-pointer-2' : url;
+    },
     canvas: document.getElementById('canvas'),
     osSize: [320, 170],
     preRun: [() => {
@@ -352,7 +370,7 @@
     printErr: (t) => console.warn(t),
   };
 </script>
-<script src="harbour_shell.js"></script>
-<script src="cardputer-zero.js" defer></script>
+<script src="harbour_shell.js?v=black-pointer-2"></script>
+<script src="cardputer-zero.js?v=black-pointer-2" defer></script>
 </body>
 </html>

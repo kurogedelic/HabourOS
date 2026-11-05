@@ -26,9 +26,11 @@
   or use 1–6 for direct launches. The system menu begins with an original
   12×12 pixel Harbour anchor mark.
 - Compact pointer: an external USB mouse works through SDL2. The on-screen
-  12×16 pointer is drawn in black with a white interior (no displaced
-  shadow). The Web simulator hides the host browser/macOS cursor when hovering
-  over the LCD, leaving only the HarbourOS cursor. Without a mouse,
+  12×16 pointer is a solid black silhouette with its clickable hotspot at
+  the upper-left pixel (no white interior or shadow). The Web simulator hides
+  the host macOS/browser pointer over the LCD, preserves the exact 320:170
+  framebuffer aspect ratio inside the bezel, and routes visible mouse
+  coordinates to the native SDL canvas by pixel center. Without a mouse,
   press **Ctrl+M** to toggle pointer mode, use **W/A/S/D** (or arrows)
   to move 5 pixels per keypress, **Enter / Space** to click, and **Esc**
   to return to ordinary keyboard operation. The pointer is separate from
