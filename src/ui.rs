@@ -210,11 +210,11 @@ where
         }
         // Full words are always preferred to clipped ones. For ties, balance.
         let hidden = right.chars().count().saturating_sub(shown_right.trim_end_matches("...").chars().count());
-        let score = if measure(&right) > max_width {
+        let score = (if measure(&right) > max_width {
             1000 + hidden as i32 * 40
         } else {
             0
-        } + (measure(&left) - measure(&shown_right)).abs();
+        }) + (measure(&left) - measure(&shown_right)).abs();
         if best.as_ref().map_or(true, |(old, _, _)| score < *old) {
             best = Some((score, left, shown_right));
         }
