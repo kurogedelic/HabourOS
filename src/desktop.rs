@@ -6,7 +6,7 @@
 //! - Esc: 何もしない（デスクトップが最背面）
 //!
 //! 描画:
-//! - アイコン（32x32、Amber 染色）+ ラベル（アイコン名）
+//! - アイコン（24x24、Amber 染色）+ 最大2行ラベル
 //! - 選択中アイコンは反転ハイライト
 
 use sdl2::rect::Rect;
@@ -209,7 +209,7 @@ impl Desktop {
         // Classic desktop for the PC/Web target.
         // Use small, unscaled icons; selection is indicated by a thin border
         // and an inverted label, not a large filled tile.
-        let icon_size = if compact { 24u32 } else { 32u32 };
+        let icon_size = 24u32;
         let layout = self.layout(x, y, w, h);
 
         for (i, app) in self.apps.iter().enumerate() {
@@ -252,27 +252,13 @@ impl Desktop {
                 let _ = assets.blit_tinted(c, app.icon, Some(icon_dst), amber);
             }
 
-            let label_w = font.measure_text(app.label);
-            let lx = cx + (layout.cell_w - label_w) / 2;
-            let ly = cy + icon_size as i32 + 3;
-            if compact && is_selected {
-                c.set_draw_color(amber);
-                let _ = c.fill_rect(Rect::new(lx - 3, ly - 1, (label_w + 6).max(1) as u32, 15));
-            }
-            font.draw_text(
-                c,
-                lx,
-                ly,
-                app.label,
-                if compact && is_selected {
-                    background
-                } else {
-                    amber
-                },
-            );
-
-            if is_selected && !compact {
-                ui::line(c, lx, ly + 13, lx + label_w, ly + 13, amber);
+            // Center each line independently; use a readable native bitmap font.
+            for (line, label) in ui::wrap_icon_label(app.label, 52, |s| font.measure_text(s)).iter().enumerate() {
+                let lw = font.measure_text(label);
+                let lx = cx + (layout.cell_w - lw) / 2;
+                let ly = cy + icon_size as i32 + 1 + line as i32 * 13;
+                font.draw_text(c, lx, ly, label, amber);
+                if is_selected { ui::line(c, lx, ly + 12, lx + lw, ly + 12, amber); }
             }
         }
 
@@ -303,7 +289,7 @@ impl Desktop {
         let muted = theme.get_color("muted");
         let paper = theme.get_color("background");
         let grid = self.layout(x, y, w, h);
-        const ICON_SIZE: u32 = 20;
+        const ICON_SIZE: u32 = 24;
 
         for (i, app) in self.apps.iter().enumerate() {
             let (cx, cy) = grid.cell_origin(i);
@@ -321,16 +307,17 @@ impl Desktop {
             }
             let _ = assets.blit_tinted(c, app.icon, Some(icon_rect), ink);
 
-            // A native 6x13 font allows full names (TextEditor, Dictionary).
-            // Classic Mac label inversion is the strongest focus indication.
-            let label_w = font.measure_text(app.label);
-            let lx = cx + (grid.cell_w - label_w) / 2;
-            let ly = cy + ICON_SIZE as i32 + 3;
-            if selected {
-                c.set_draw_color(ink);
-                let _ = c.fill_rect(Rect::new(lx - 3, ly - 1, (label_w + 6) as u32, 15));
+            // Wrap long names to two centered lines without scaling the font.
+            for (line, label) in ui::wrap_icon_label(app.label, 52, |s| font.measure_text(s)).iter().enumerate() {
+                let lw = font.measure_text(label);
+                let lx = cx + (grid.cell_w - lw) / 2;
+                let ly = cy + ICON_SIZE as i32 + 1 + line as i32 * 13;
+                if selected {
+                    c.set_draw_color(ink);
+                    let _ = c.fill_rect(Rect::new(lx - 3, ly - 1, (lw + 6) as u32, 14));
+                }
+                font.draw_text(c, lx, ly, label, if selected { paper } else { ink });
             }
-            font.draw_text(c, lx, ly, app.label, if selected { paper } else { ink });
         }
     }
 
@@ -351,14 +338,14 @@ impl Desktop {
         let cols = self.cols.max(1);
         let compact = compact_display(w, h);
         let cell_w = if compact { 68i32 } else { 72i32 };
-        let cell_h = if compact { 46i32 } else { 56i32 };
+        let cell_h = if compact { 51i32 } else { 56i32 };
         let grid_w = (cols as i32 * cell_w).min(w as i32);
         let grid_x = if compact {
             x + (w as i32 - grid_w - 10).max(0)
         } else {
             x + ((w as i32 - grid_w) / 2).max(8)
         };
-        let grid_y = y + if compact { 8 } else { 24 };
+        let grid_y = y + if compact { 0 } else { 24 };
         DesktopLayout {
             cols,
             cell_w,
@@ -406,10 +393,10 @@ mod tests {
         assert_eq!(desktop.apps.len(), 6);
         let layout = desktop.layout(2, 16, 320, 170);
         assert_eq!(layout.grid_x, 176);
-        assert_eq!(layout.grid_y, 24);
-        assert_eq!(layout.cell_origin(5), (244, 116));
+        assert_eq!(layout.grid_y, 16);
+        assert_eq!(layout.cell_origin(5), (244, 118));
         // Last label fits beneath the third icon row.
-        assert!(layout.cell_origin(5).1 + 20 + 3 + 13 <= 170);
+        assert!(layout.cell_origin(5).1 + 24 + 1 + 13 * 2 <= 170);
         // Left desktop workspace is not a clickable icon.
         assert_eq!(desktop.hit_icon(60, 50, 2, 16, 320, 170), None);
         assert_eq!(desktop.hit_icon(265, 123, 2, 16, 320, 170), Some(5));
