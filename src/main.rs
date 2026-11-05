@@ -841,9 +841,6 @@ fn main() -> Result<(), String> {
                     &mut canvas,
                     pointer.x,
                     pointer.y,
-                    tm.get_color("foreground"),
-                    tm.get_color("widget_face_active"),
-                    tm.get_color("muted"),
                 );
             } else {
                 draw_pointer(&mut canvas, &tm, pointer.x, pointer.y);
