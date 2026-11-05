@@ -19,12 +19,16 @@
   The selected label inverts to dark ink with light lettering; the left side
   remains a usable, uncluttered workspace. App windows retain a thin Mac-style
   frame. On this small screen, app frames fill the width and every pixel
-  below the 16px menu strip (no outer margin). Icons and fonts are drawn
+  below the 16px menu strip (no outer margin). The 1px window outlines
+  and title stripes are aligned around the measured system-font title, and the
+  12px anchor is optically centered in the menu bar. Icons and fonts are drawn
   pixel-sharp without bitmap scaling. Press Enter to open the selected icon,
   or use 1–6 for direct launches. The system menu begins with an original
   12×12 pixel Harbour anchor mark.
 - Compact pointer: an external USB mouse works through SDL2. The on-screen
-  12×16 pointing arrow is shown on first mouse interaction. Without a mouse,
+  12×16 pointer is drawn in black with a white interior (no displaced
+  shadow). The Web simulator hides the host browser/macOS cursor when hovering
+  over the LCD, leaving only the HarbourOS cursor. Without a mouse,
   press **Ctrl+M** to toggle pointer mode, use **W/A/S/D** (or arrows)
   to move 5 pixels per keypress, **Enter / Space** to click, and **Esc**
   to return to ordinary keyboard operation. The pointer is separate from
