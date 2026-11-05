@@ -242,7 +242,10 @@ where
             continue;
         }
         // Full words are always preferred to clipped ones. For ties, balance.
-        let hidden = right.chars().count().saturating_sub(shown_right.trim_end_matches("...").chars().count());
+        let hidden = right
+            .chars()
+            .count()
+            .saturating_sub(shown_right.trim_end_matches("...").chars().count());
         let score = (if measure(&right) > max_width {
             1000 + hidden as i32 * 40
         } else {
@@ -289,7 +292,10 @@ mod icon_label_tests {
 
     #[test]
     fn wraps_text_editor_on_word_boundary() {
-        assert_eq!(wrap_icon_label("Text Editor", 64, width), vec!["Text", "Editor"]);
+        assert_eq!(
+            wrap_icon_label("Text Editor", 64, width),
+            vec!["Text", "Editor"]
+        );
     }
 
     #[test]
