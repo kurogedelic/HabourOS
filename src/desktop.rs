@@ -63,7 +63,7 @@ impl Desktop {
             apps: vec![
                 DesktopApp {
                     icon: "icons/TextEditor",
-                    label: "TextEditor",
+                    label: "Text Editor",
                     kind: AppKind::TextEditor,
                 },
                 DesktopApp {
@@ -100,8 +100,8 @@ impl Desktop {
     /// 画面幅に合わせてアイコングリッド列数を更新する。
     pub fn set_view(&mut self, w: u32, _h: u32) {
         if w <= 360 {
-            // A right-aligned two-column desktop, not an INDEX page.
-            self.cols = 2;
+            // Landscape 320x170: three columns keep 24px icons and labels apart.
+            self.cols = 3;
         } else {
             let usable_w = w as i32 - 48;
             self.cols = (usable_w / 72).max(1) as usize;
@@ -112,7 +112,7 @@ impl Desktop {
     pub fn handle_key(&mut self, key: sdl2::keyboard::Keycode) -> DesktopAction {
         use sdl2::keyboard::Keycode;
         let n = self.apps.len();
-        if self.cols == 2 {
+        if self.cols == 3 {
             // Direct 1–6 app shortcuts remain available on the handheld.
             let direct = match key {
                 Keycode::Num1 => Some(0),
@@ -132,12 +132,12 @@ impl Desktop {
         }
         match key {
             Keycode::Left => {
-                if self.selected > 0 && (self.cols != 2 || self.selected % 2 == 1) {
+                if self.selected > 0 && self.selected % self.cols != 0 {
                     self.selected -= 1;
                 }
             }
             Keycode::Right => {
-                if self.selected + 1 < n && (self.cols != 2 || self.selected % 2 == 0) {
+                if self.selected + 1 < n && self.selected % self.cols + 1 < self.cols {
                     self.selected += 1;
                 }
             }
@@ -253,7 +253,7 @@ impl Desktop {
             }
 
             // Center each line independently; use a readable native bitmap font.
-            for (line, label) in ui::wrap_icon_label(app.label, 52, |s| font.measure_text(s)).iter().enumerate() {
+            for (line, label) in ui::wrap_icon_label(app.label, layout.cell_w - 8, |s| font.measure_text(s)).iter().enumerate() {
                 let lw = font.measure_text(label);
                 let lx = cx + (layout.cell_w - lw) / 2;
                 let ly = cy + icon_size as i32 + 1 + line as i32 * 13;
@@ -271,9 +271,8 @@ impl Desktop {
         }
     }
 
-    /// Cardputer Zero: a real icon desktop, with System 6/7-inspired
-    /// layout adapted to a 320x170 screen. The left side remains a workspace
-    /// and all six apps sit in two right-aligned columns.
+    /// Cardputer Zero: 24px desktop icons with a 3x2 grid at 320x170.
+    /// Each label has enough room for two lines without touching the next icon.
     fn draw_compact(
         &self,
         c: &mut Canvas<Window>,
@@ -286,10 +285,9 @@ impl Desktop {
         h: u32,
     ) {
         let ink = theme.get_color("foreground");
-        let muted = theme.get_color("muted");
-        let paper = theme.get_color("background");
         let grid = self.layout(x, y, w, h);
         const ICON_SIZE: u32 = 24;
+        const LABEL_LINE_HEIGHT: i32 = 13;
 
         for (i, app) in self.apps.iter().enumerate() {
             let (cx, cy) = grid.cell_origin(i);
@@ -297,26 +295,28 @@ impl Desktop {
             let icon_x = cx + (grid.cell_w - ICON_SIZE as i32) / 2;
             let icon_rect = Rect::new(icon_x, cy, ICON_SIZE, ICON_SIZE);
 
-            // Small focus border, never a large opaque icon tile.
+            // One-pixel focus outline, with no oversized inverted text blocks.
             if selected {
                 ui::draw_rect(
                     c,
                     Rect::new(icon_x - 2, cy - 2, ICON_SIZE + 4, ICON_SIZE + 4),
-                    muted,
+                    ink,
                 );
             }
             let _ = assets.blit_tinted(c, app.icon, Some(icon_rect), ink);
 
-            // Wrap long names to two centered lines without scaling the font.
-            for (line, label) in ui::wrap_icon_label(app.label, 52, |s| font.measure_text(s)).iter().enumerate() {
-                let lw = font.measure_text(label);
-                let lx = cx + (grid.cell_w - lw) / 2;
-                let ly = cy + ICON_SIZE as i32 + 1 + line as i32 * 13;
+            for (line, label) in ui::wrap_icon_label(
+                app.label,
+                grid.cell_w - 12,
+                |s| font.measure_text(s),
+            ).iter().enumerate() {
+                let label_width = font.measure_text(label);
+                let lx = cx + (grid.cell_w - label_width) / 2;
+                let ly = cy + ICON_SIZE as i32 + 5 + line as i32 * LABEL_LINE_HEIGHT;
+                font.draw_text(c, lx, ly, label, ink);
                 if selected {
-                    c.set_draw_color(ink);
-                    let _ = c.fill_rect(Rect::new(lx - 3, ly - 1, (lw + 6) as u32, 14));
+                    ui::line(c, lx, ly + 12, lx + label_width - 1, ly + 12, ink);
                 }
-                font.draw_text(c, lx, ly, label, if selected { paper } else { ink });
             }
         }
     }
@@ -337,15 +337,15 @@ impl Desktop {
     fn layout(&self, x: i32, y: i32, w: u32, h: u32) -> DesktopLayout {
         let cols = self.cols.max(1);
         let compact = compact_display(w, h);
-        let cell_w = if compact { 68i32 } else { 72i32 };
-        let cell_h = if compact { 50i32 } else { 56i32 };
+        let cell_w = if compact { 76i32 } else { 72i32 };
+        let cell_h = if compact { 70i32 } else { 56i32 };
         let grid_w = (cols as i32 * cell_w).min(w as i32);
         let grid_x = if compact {
-            x + (w as i32 - grid_w - 10).max(0)
+            x + (w as i32 - grid_w - 12).max(0)
         } else {
             x + ((w as i32 - grid_w) / 2).max(8)
         };
-        let grid_y = y + if compact { 2 } else { 24 };
+        let grid_y = y + if compact { 12 } else { 24 };
         DesktopLayout {
             cols,
             cell_w,
@@ -386,17 +386,17 @@ mod tests {
     use crate::input::{PointerAction, PointerButton, PointerInput};
 
     #[test]
-    fn cardputer_zero_desktop_uses_two_right_aligned_columns() {
+    fn cardputer_zero_desktop_uses_three_columns_two_rows() {
         let mut desktop = Desktop::new();
         desktop.set_view(320, 154);
-        assert_eq!(desktop.cols, 2);
+        assert_eq!(desktop.cols, 3);
         assert_eq!(desktop.apps.len(), 6);
         let layout = desktop.layout(2, 16, 320, 170);
-        assert_eq!(layout.grid_x, 176);
-        assert_eq!(layout.grid_y, 18);
-        assert_eq!(layout.cell_origin(5), (244, 118));
+        assert_eq!(layout.grid_x, 82);
+        assert_eq!(layout.grid_y, 28);
+        assert_eq!(layout.cell_origin(5), (234, 98));
         // Last label fits beneath the third icon row.
-        assert!(layout.cell_origin(5).1 + 24 + 1 + 13 * 2 <= 170);
+        assert!(layout.cell_origin(5).1 + 24 + 5 + 13 * 2 <= 170);
         // Left desktop workspace is not a clickable icon.
         assert_eq!(desktop.hit_icon(60, 50, 2, 16, 320, 170), None);
         assert_eq!(desktop.hit_icon(265, 123, 2, 16, 320, 170), Some(5));
@@ -412,13 +412,15 @@ mod tests {
         desktop.handle_key(Keycode::Right);
         assert_eq!(desktop.selected, 1);
         desktop.handle_key(Keycode::Right);
-        assert_eq!(desktop.selected, 1);
+        assert_eq!(desktop.selected, 2);
+        desktop.handle_key(Keycode::Right);
+        assert_eq!(desktop.selected, 2);
         desktop.handle_key(Keycode::Down);
-        assert_eq!(desktop.selected, 3);
+        assert_eq!(desktop.selected, 5);
         desktop.handle_key(Keycode::Up);
-        assert_eq!(desktop.selected, 1);
+        assert_eq!(desktop.selected, 2);
         desktop.handle_key(Keycode::Left);
-        assert_eq!(desktop.selected, 0);
+        assert_eq!(desktop.selected, 1);
     }
 
     #[test]
