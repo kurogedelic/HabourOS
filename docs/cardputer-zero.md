@@ -20,6 +20,11 @@
   remains a usable, uncluttered workspace. App windows retain a thin Mac-style
   frame. Icons and fonts are drawn pixel-sharp without bitmap scaling.
   Press Enter to open the selected icon, or use 1–6 for direct launches.
+- System typography: compact menus and window titles use a chunky,
+  proportionally spaced **Chicago-inspired** treatment of HarbourOS's
+  existing M+ bitmap glyphs (1px heavier strokes). Icon captions, application
+  bodies and Japanese text keep their existing M+/JIS rendering.
+  This does **not** distribute Apple's original Chicago font.
 - The handheld launcher selects `assets/themes/cardputer-zero.yaml` via
   `HARBOUR_THEME`, keeping the desktop default theme unchanged.
 - Initial goal: launch the desktop and navigate to one app using the built-in

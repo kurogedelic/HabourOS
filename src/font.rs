@@ -230,6 +230,109 @@ impl FontSystem {
         }
         width
     }
+
+    /// Compact Macintosh-inspired bitmap system face.
+    ///
+    /// It is deliberately *not* Apple's proprietary Chicago font. ASCII
+    /// glyphs are drawn from HarbourOS's existing M+ bitmap, with a heavier
+    /// 1px stroke and proportional spacing; other scripts use the regular
+    /// M+/JIS fallback. This preserves pixel crispness and licensing.
+    pub fn measure_system_text(&self, text: &str) -> i32 {
+        text.chars().map(|ch| self.system_char_advance(ch)).sum()
+    }
+
+    fn system_char_advance(&self, ch: char) -> i32 {
+        if ch == ' ' {
+            return 4;
+        }
+        if let Some(ref font) = self.font {
+            if let Some((min, max)) = system_ascii_bounds(font, ch) {
+                return (max - min + 1) as i32 + 2;
+            }
+        }
+        self.char_width(ch)
+    }
+
+    pub fn draw_system_text(
+        &self,
+        c: &mut Canvas<Window>,
+        x: i32,
+        y: i32,
+        text: &str,
+        color: Color,
+    ) {
+        let mut cursor_x = x;
+        for ch in text.chars() {
+            let advance = self.system_char_advance(ch);
+            if ch == ' ' {
+                cursor_x += advance;
+                continue;
+            }
+            if let Some(ref font) = self.font {
+                if let (Some(data), Some((min, max))) =
+                    (font.glyph_data(ch), system_ascii_bounds(font, ch))
+                {
+                    c.set_draw_color(color);
+                    for (row, bits) in data.iter().enumerate().take(font.height as usize) {
+                        let bits = (*bits & 0xff) as u8;
+                        for col in min..=max {
+                            if bits & (1 << (7 - col)) != 0 {
+                                // Thick Chicago-like strokes, no antialiasing.
+                                let px = cursor_x + (col - min) as i32;
+                                let py = y + row as i32;
+                                let _ = c.draw_point((px, py));
+                                let _ = c.draw_point((px + 1, py));
+                            }
+                        }
+                    }
+                    cursor_x += advance;
+                    continue;
+                }
+            }
+            self.draw_text(c, cursor_x, y, &ch.to_string(), color);
+            cursor_x += advance;
+        }
+    }
+}
+
+/// Visible bounds of an ASCII M+ glyph; used for proportional spacing.
+/// The system face is a rendering style, not a bundled commercial font.
+fn system_ascii_bounds(font: &UnicodeFont, ch: char) -> Option<(u8, u8)> {
+    if !('!'..='~').contains(&ch) {
+        return None;
+    }
+    let data = font.glyph_data(ch)?;
+    let mut min = font.width;
+    let mut max = 0;
+    for word in data.iter().take(font.height as usize) {
+        let bits = (*word & 0xff) as u8;
+        for col in 0..font.width {
+            if bits & (1 << (7 - col)) != 0 {
+                min = min.min(col);
+                max = max.max(col);
+            }
+        }
+    }
+    if min == font.width {
+        None
+    } else {
+        Some((min, max))
+    }
+}
+
+#[cfg(test)]
+mod system_font_tests {
+    use super::*;
+
+    #[test]
+    fn compact_system_font_is_proportional_and_pixel_sized() {
+        let mut fonts = FontSystem::new();
+        fonts.load_font(load_mplus_f12r());
+        assert!(fonts.measure_system_text("MMMM") > fonts.measure_system_text("IIII"));
+        assert!(fonts.measure_system_text("Harbour") > 0);
+        assert_eq!(fonts.measure_system_text(" "), 4);
+        assert_eq!(fonts.measure_text("あ"), fonts.measure_system_text("あ"));
+    }
 }
 
 // Include the M+ font

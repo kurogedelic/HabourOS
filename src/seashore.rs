@@ -75,12 +75,15 @@ impl<'r> Seashore<'r> {
             c.set_draw_color(paper);
             let _ = c.fill_rect(Rect::new(0, 0, w, BAR_H as u32));
             crate::ui::line(c, 0, BAR_H - 1, w as i32 - 1, BAR_H - 1, ink);
-            self.font_system.draw_text(c, 6, 1, "Harbour", ink);
-            self.font_system.draw_text(c, 61, 1, "File", ink);
-            self.font_system.draw_text(c, 97, 1, "View", ink);
+            let mut menu_x = 6;
+            for (index, menu) in ["Harbour", "File", "View"].iter().enumerate() {
+                self.font_system.draw_system_text(c, menu_x, 1, menu, ink);
+                menu_x +=
+                    self.font_system.measure_system_text(menu) + if index == 0 { 16 } else { 14 };
+            }
             let clock = os.system_time.get(..5).unwrap_or(&os.system_time);
-            let clock_x = (w as i32 - self.font_system.measure_text(clock) - 7).max(0);
-            self.font_system.draw_text(c, clock_x, 1, clock, ink);
+            let clock_x = (w as i32 - self.font_system.measure_system_text(clock) - 7).max(0);
+            self.font_system.draw_system_text(c, clock_x, 1, clock, ink);
             return BAR_H;
         }
 
