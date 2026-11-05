@@ -333,6 +333,12 @@
   // One simulator can share the existing HarbourOS Emscripten bundle.
   // Resolution is fixed to the physical Cardputer Zero LCD: 320 x 170.
   var Module = {
+    // Asset URL versioning prevents browsers/CDNs from mixing a newer pointer
+    // renderer with a cached older WASM or SDL data package after deployment.
+    locateFile(name, prefix) {
+      const url = (prefix || '') + name;
+      return name.startsWith('harbour_shell.') ? url + '?v=black-pointer-2' : url;
+    },
     canvas: document.getElementById('canvas'),
     osSize: [320, 170],
     preRun: [() => {
@@ -364,7 +370,7 @@
     printErr: (t) => console.warn(t),
   };
 </script>
-<script src="harbour_shell.js"></script>
-<script src="cardputer-zero.js" defer></script>
+<script src="harbour_shell.js?v=black-pointer-2"></script>
+<script src="cardputer-zero.js?v=black-pointer-2" defer></script>
 </body>
 </html>
