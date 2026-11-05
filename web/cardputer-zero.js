@@ -49,6 +49,22 @@
   };
   const specialKeys = new Set(['ESC','TAB','DEL','FN','CTRL']);
   const fnArrow = { 'F':'ArrowUp', 'Z':'ArrowLeft', 'X':'ArrowDown', 'C':'ArrowRight' };
+  // Fn + the upper legends types their printed symbols. Use the actual
+  // punctuation scancodes, rather than treating Q/W/etc. as text input.
+  // [DOM code, legacy keyCode, needs Shift for this symbol]
+  const fnSymbols = {
+    '1':['Digit1',49,true], '2':['Digit2',50,true],
+    '3':['Digit3',51,true], '4':['Digit4',52,true],
+    '5':['Digit5',53,true], '6':['Digit6',54,true],
+    '7':['Digit7',55,true], '8':['Digit8',56,true],
+    '9':['Digit9',57,true], '0':['Digit0',48,true],
+    'Q':['Backquote',192,true],
+    'W':['Minus',189,false], 'E':['Equal',187,true],
+    'R':['Equal',187,false], 'T':['Slash',191,false],
+    'Y':['Backslash',220,false],
+    'U':['BracketLeft',219,false], 'I':['BracketRight',221,false],
+    'O':['BracketLeft',219,true], 'P':['BracketRight',221,true]
+  };
   const keyCodes = {
     Escape:27, Tab:9, Backspace:8, Enter:13, Space:32,
     Control:17, ArrowUp:38, ArrowLeft:37, ArrowDown:40, ArrowRight:39,
@@ -105,7 +121,7 @@
     const keyCode = type === 'keypress' ? charCode : def.keyCode;
     const ev = new KeyboardEvent(type, {
       key:def.key, code:def.code, bubbles:true, cancelable:true,
-      ctrlKey:ctrlLatched
+      ctrlKey:ctrlLatched, shiftKey:!!def.shiftKey
     });
     Object.defineProperty(ev, 'keyCode', {get:() => keyCode});
     Object.defineProperty(ev, 'which', {get:() => keyCode});
@@ -131,9 +147,16 @@
       setModVisual();
       return null;
     }
-    // Cardputer Zero Fn navigation: F=Up, Z=Left, X=Down, C=Right.
+    // Cardputer Zero Fn navigation and the printed upper symbols.
     const mapped = fnLatched && fnArrow[label] ? fnArrow[label] : label;
-    const def = definition(mapped);
+    let def;
+    if (fnLatched && fnSymbols[label]) {
+      const [code, keyCode, shiftKey] = fnSymbols[label];
+      const char = secondary[label];
+      def = {code, key:char, keyCode, char, shiftKey};
+    } else {
+      def = definition(mapped);
+    }
     if (!def) return null;
     fire('keydown', def);
     if (def.char && !ctrlLatched) fire('keypress', def);
