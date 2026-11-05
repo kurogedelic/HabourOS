@@ -132,6 +132,10 @@ fn main() -> Result<(), String> {
     let mut dialog = ConfirmDialog::new();
 
     let mut mode = Mode::Desktop;
+    // Cardputer Zero has no touchscreen. Ctrl+M enables keyboard pointer mode:
+    // WASD moves the pixel cursor, Enter clicks, Esc returns to app keys.
+    let mut pointer_keys = false;
+    let mut pointer_visible = false;
 
     let mut events = sdl.event_pump()?;
     let mouse = events.mouse_state();
@@ -167,6 +171,7 @@ fn main() -> Result<(), String> {
                     x, y, xrel, yrel, ..
                 } => {
                     sdl.mouse().show_cursor(false);
+                    pointer_visible = true;
                     let input = PointerInput::move_to(x, y, xrel, yrel);
                     os.input_pointer(input);
                     handle_pointer_input(
@@ -191,6 +196,7 @@ fn main() -> Result<(), String> {
                 } => {
                     sdl.mouse().show_cursor(false);
                     if let Some(button) = PointerButton::from_sdl(mouse_btn) {
+                        pointer_visible = true;
                         let input =
                             PointerInput::button(PointerAction::ButtonDown, x, y, button, clicks);
                         os.input_pointer(input);
@@ -270,6 +276,79 @@ fn main() -> Result<(), String> {
                     if key == Keycode::F11 {
                         toggle_fullscreen(&mut canvas);
                         continue;
+                    }
+
+                    let (key_w, key_h) = canvas
+                        .output_size()
+                        .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
+                    if compact_screen(key_w, key_h) {
+                        let ctrl = keymod & Mod::LCTRLMOD != Mod::NOMOD
+                            || keymod & Mod::RCTRLMOD != Mod::NOMOD;
+                        if ctrl && key == Keycode::M {
+                            pointer_keys = !pointer_keys;
+                            pointer_visible = true;
+                            continue;
+                        }
+
+                        if pointer_keys {
+                            if key == Keycode::Escape {
+                                pointer_keys = false;
+                                continue;
+                            }
+                            let movement = match key {
+                                Keycode::W | Keycode::Up => Some((0, -5)),
+                                Keycode::S | Keycode::Down => Some((0, 5)),
+                                Keycode::A | Keycode::Left => Some((-5, 0)),
+                                Keycode::D | Keycode::Right => Some((5, 0)),
+                                _ => None,
+                            };
+                            if let Some((dx, dy)) = movement {
+                                let pointer = *os.pointer();
+                                let x = (pointer.x + dx).clamp(0, key_w as i32 - 1);
+                                let y = (pointer.y + dy).clamp(0, key_h as i32 - 1);
+                                let input = PointerInput::move_to(x, y, dx, dy);
+                                os.input_pointer(input);
+                                handle_pointer_input(
+                                    input,
+                                    &mut mode,
+                                    &mut desktop,
+                                    &mut browser,
+                                    &mut editor_path,
+                                    &mut editor,
+                                    &mut vfs,
+                                    &vfs_path,
+                                    &canvas,
+                                );
+                                continue;
+                            }
+                            if matches!(key, Keycode::Return | Keycode::Space) {
+                                let pointer = *os.pointer();
+                                // Desktop requires double click to launch.
+                                let clicks = if matches!(mode, Mode::Desktop) { 2 } else { 1 };
+                                for action in [PointerAction::ButtonDown, PointerAction::ButtonUp] {
+                                    let input = PointerInput::button(
+                                        action,
+                                        pointer.x,
+                                        pointer.y,
+                                        PointerButton::Left,
+                                        clicks,
+                                    );
+                                    os.input_pointer(input);
+                                    handle_pointer_input(
+                                        input,
+                                        &mut mode,
+                                        &mut desktop,
+                                        &mut browser,
+                                        &mut editor_path,
+                                        &mut editor,
+                                        &mut vfs,
+                                        &vfs_path,
+                                        &canvas,
+                                    );
+                                }
+                                continue;
+                            }
+                        }
                     }
 
                     match mode {
@@ -562,15 +641,8 @@ fn main() -> Result<(), String> {
 
         let bar_h = seashore.draw_top_bar(&mut canvas, &os);
 
-        // アプリ領域矩形（topbar の下）
-        let app_rect = Rect::new(
-            FRAME_MARGIN,
-            bar_h + FRAME_MARGIN,
-            out_w.saturating_sub(FRAME_MARGIN as u32 * 2),
-            out_h
-                .saturating_sub(bar_h as u32)
-                .saturating_sub(FRAME_MARGIN as u32 * 2),
-        );
+        // Cardputer windows fill the LCD area below the 16px menu bar.
+        let app_rect = app_rect_for_size(out_w, out_h);
 
         match &mode {
             Mode::Desktop => {
@@ -762,9 +834,20 @@ fn main() -> Result<(), String> {
             }
         }
 
-        if !compact_screen(out_w, out_h) {
+        if !compact_screen(out_w, out_h) || pointer_visible {
             let pointer = os.pointer();
-            draw_pointer(&mut canvas, &tm, pointer.x, pointer.y);
+            if compact_screen(out_w, out_h) {
+                harbour_shell::ui::draw_compact_pointer_cursor(
+                    &mut canvas,
+                    pointer.x,
+                    pointer.y,
+                    tm.get_color("foreground"),
+                    tm.get_color("widget_face_active"),
+                    tm.get_color("muted"),
+                );
+            } else {
+                draw_pointer(&mut canvas, &tm, pointer.x, pointer.y);
+            }
         }
 
         canvas.present();
@@ -960,13 +1043,18 @@ fn app_window_rect(canvas: &sdl2::render::Canvas<sdl2::video::Window>) -> Rect {
     let (w, h) = canvas
         .output_size()
         .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
+    app_rect_for_size(w, h)
+}
+
+fn app_rect_for_size(w: u32, h: u32) -> Rect {
     let bar_h = topbar_height(w, h);
+    let margin = if compact_screen(w, h) { 0 } else { FRAME_MARGIN };
     Rect::new(
-        FRAME_MARGIN,
-        bar_h + FRAME_MARGIN,
-        w.saturating_sub(FRAME_MARGIN as u32 * 2),
+        margin,
+        bar_h + margin,
+        w.saturating_sub(margin as u32 * 2),
         h.saturating_sub(bar_h as u32)
-            .saturating_sub(FRAME_MARGIN as u32 * 2),
+            .saturating_sub(margin as u32 * 2),
     )
 }
 
