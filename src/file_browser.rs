@@ -582,12 +582,17 @@ impl FileBrowser {
             } else {
                 name.clone()
             };
-            for (line, part) in ui::wrap_icon_label(&label, cell_w - 8, |s| font.measure_text(s)).iter().enumerate() {
+            for (line, part) in ui::wrap_icon_label(&label, cell_w - 8, |s| font.measure_text(s))
+                .iter()
+                .enumerate()
+            {
                 let lw = font.measure_text(part);
                 let lx = cx + (cell_w - lw) / 2;
                 let ly = cy + icon_size as i32 + 1 + line as i32 * 13;
                 font.draw_text(c, lx, ly, part, amber);
-                if is_cursor { ui::line(c, lx, ly + 12, lx + lw, ly + 12, amber); }
+                if is_cursor {
+                    ui::line(c, lx, ly + 12, lx + lw, ly + 12, amber);
+                }
             }
         }
 
