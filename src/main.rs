@@ -1328,3 +1328,18 @@ fn toggle_fullscreen(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>) {
         let _ = canvas.window_mut().set_fullscreen(FullscreenType::Off);
     }
 }
+
+#[cfg(test)]
+mod compact_geometry_tests {
+    use super::*;
+
+    #[test]
+    fn compact_windows_touch_all_three_available_edges() {
+        assert_eq!(app_rect_for_size(320, 170), Rect::new(0, 16, 320, 154));
+    }
+
+    #[test]
+    fn large_windows_keep_the_desktop_margin() {
+        assert_eq!(app_rect_for_size(480, 320), Rect::new(2, 22, 476, 296));
+    }
+}
