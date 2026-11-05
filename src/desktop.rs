@@ -314,9 +314,7 @@ impl Desktop {
                 let lx = cx + (grid.cell_w - label_width) / 2;
                 let ly = cy + ICON_SIZE as i32 + 5 + line as i32 * LABEL_LINE_HEIGHT;
                 font.draw_text(c, lx, ly, label, ink);
-                if selected {
-                    ui::line(c, lx, ly + 12, lx + label_width - 1, ly + 12, ink);
-                }
+
             }
         }
     }
