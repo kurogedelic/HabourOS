@@ -44,6 +44,39 @@ pub fn line(c: &mut Canvas<Window>, x1: i32, y1: i32, x2: i32, y2: i32, col: Col
 }
 
 /// 1-bit 風のポインタカーソルを描画する。
+/// Small Classic Mac-style pointer for 320×170 displays.
+/// Hotspot is the upper-left pixel, matching SDL pointer coordinates.
+pub fn draw_compact_pointer_cursor(
+    c: &mut Canvas<Window>,
+    x: i32,
+    y: i32,
+    outline: Color,
+    paper: Color,
+    shadow: Color,
+) {
+    const ARROW: [&str; 16] = [
+        "X           ",
+        "XX          ",
+        "XFX         ",
+        "XFFX        ",
+        "XFFFX       ",
+        "XFFFFX      ",
+        "XFFFFFX     ",
+        "XFFFFFFX    ",
+        "XFFFFFFFX   ",
+        "XFFFXXXXX   ",
+        "XFFX XFFX   ",
+        "XFX  XFFX   ",
+        "XX    XFFX  ",
+        "X     XFFX  ",
+        "       XX   ",
+        "            ",
+    ];
+    draw_pointer_pixels(c, x + 1, y + 1, &ARROW, 'X', shadow);
+    draw_pointer_pixels(c, x, y, &ARROW, 'F', paper);
+    draw_pointer_pixels(c, x, y, &ARROW, 'X', outline);
+}
+
 pub fn draw_pointer_cursor(
     c: &mut Canvas<Window>,
     x: i32,
@@ -209,7 +242,10 @@ where
             continue;
         }
         // Full words are always preferred to clipped ones. For ties, balance.
-        let hidden = right.chars().count().saturating_sub(shown_right.trim_end_matches("...").chars().count());
+        let hidden = right
+            .chars()
+            .count()
+            .saturating_sub(shown_right.trim_end_matches("...").chars().count());
         let score = (if measure(&right) > max_width {
             1000 + hidden as i32 * 40
         } else {
@@ -256,7 +292,10 @@ mod icon_label_tests {
 
     #[test]
     fn wraps_text_editor_on_word_boundary() {
-        assert_eq!(wrap_icon_label("Text Editor", 64, width), vec!["Text", "Editor"]);
+        assert_eq!(
+            wrap_icon_label("Text Editor", 64, width),
+            vec!["Text", "Editor"]
+        );
     }
 
     #[test]

@@ -253,12 +253,18 @@ impl Desktop {
             }
 
             // Center each line independently; use a readable native bitmap font.
-            for (line, label) in ui::wrap_icon_label(app.label, layout.cell_w - 8, |s| font.measure_text(s)).iter().enumerate() {
+            for (line, label) in
+                ui::wrap_icon_label(app.label, layout.cell_w - 8, |s| font.measure_text(s))
+                    .iter()
+                    .enumerate()
+            {
                 let lw = font.measure_text(label);
                 let lx = cx + (layout.cell_w - lw) / 2;
                 let ly = cy + icon_size as i32 + 1 + line as i32 * 13;
                 font.draw_text(c, lx, ly, label, amber);
-                if is_selected { ui::line(c, lx, ly + 12, lx + lw, ly + 12, amber); }
+                if is_selected {
+                    ui::line(c, lx, ly + 12, lx + lw, ly + 12, amber);
+                }
             }
         }
 
@@ -307,16 +313,16 @@ impl Desktop {
             };
             let _ = assets.blit_tinted(c, icon_key, Some(icon_rect), ink);
 
-            let labels = ui::wrap_icon_label(
-                app.label,
-                grid.cell_w - 4,
-                |s| font.measure_text(s),
-            );
+            let labels = ui::wrap_icon_label(app.label, grid.cell_w - 4, |s| font.measure_text(s));
             if labels.is_empty() {
                 continue;
             }
 
-            let widest = labels.iter().map(|s| font.measure_text(s)).max().unwrap_or(0);
+            let widest = labels
+                .iter()
+                .map(|s| font.measure_text(s))
+                .max()
+                .unwrap_or(0);
             let label_y = cy + ICON_SIZE as i32 + LABEL_OFFSET;
             if selected {
                 let label_x = cx + (grid.cell_w - widest) / 2;

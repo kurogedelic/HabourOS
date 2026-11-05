@@ -75,7 +75,9 @@ impl<'r> Seashore<'r> {
             c.set_draw_color(paper);
             let _ = c.fill_rect(Rect::new(0, 0, w, BAR_H as u32));
             crate::ui::line(c, 0, BAR_H - 1, w as i32 - 1, BAR_H - 1, ink);
-            let mut menu_x = 6;
+            // A 12px monochrome Harbour emblem occupies the system-menu slot.
+            draw_harbour_menu_mark(c, 4, 2, ink);
+            let mut menu_x = 22;
             for (index, menu) in ["Harbour", "File", "View"].iter().enumerate() {
                 self.font_system.draw_system_text(c, menu_x, 1, menu, ink);
                 menu_x +=
@@ -179,6 +181,33 @@ impl<'r> Seashore<'r> {
                 &win.title,
                 title_col,
             );
+        }
+    }
+}
+
+/// Original 12×12 bitmap emblem for the Classic Mac-like system menu.
+/// Uses an anchor silhouette rather than a third-party trademark.
+fn draw_harbour_menu_mark(c: &mut Canvas<Window>, x: i32, y: i32, color: sdl2::pixels::Color) {
+    const EMBLEM: [&str; 12] = [
+        "     XX     ",
+        "    X  X    ",
+        "    X  X    ",
+        "     XX     ",
+        "     XX     ",
+        "   XXXXXX   ",
+        "     XX     ",
+        "     XX     ",
+        "X    XX    X",
+        "XX   XX   XX",
+        " XXX XX XXX ",
+        "  XXXXXXXX  ",
+    ];
+    c.set_draw_color(color);
+    for (row, line) in EMBLEM.iter().enumerate() {
+        for (col, pixel) in line.bytes().enumerate() {
+            if pixel == b'X' {
+                let _ = c.draw_point((x + col as i32, y + row as i32));
+            }
         }
     }
 }
