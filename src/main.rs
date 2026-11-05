@@ -837,14 +837,7 @@ fn main() -> Result<(), String> {
         if !compact_screen(out_w, out_h) || pointer_visible {
             let pointer = os.pointer();
             if compact_screen(out_w, out_h) {
-                harbour_shell::ui::draw_compact_pointer_cursor(
-                    &mut canvas,
-                    pointer.x,
-                    pointer.y,
-                    tm.get_color("foreground"),
-                    tm.get_color("widget_face_active"),
-                    tm.get_color("muted"),
-                );
+                harbour_shell::ui::draw_compact_pointer_cursor(&mut canvas, pointer.x, pointer.y);
             } else {
                 draw_pointer(&mut canvas, &tm, pointer.x, pointer.y);
             }
@@ -1077,41 +1070,56 @@ fn draw_app_window(
         .output_size()
         .unwrap_or((WINDOW_WIDTH, WINDOW_HEIGHT));
     if compact_screen(screen_w, screen_h) {
-        // Slim Macintosh-inspired frame. The title stripe is subdued, not
-        // a broad high-contrast block on a 320x170 screen.
-        let ink = tm.get_color("muted");
+        // Classic Mac-style titlebar: a single solid outer border, straight
+        // 1px separator and two clean, symmetric sets of title stripes.
+        // Stop the stripes before the close box and centered title; never
+        // paint through the lettering and cover it with a second rectangle.
+        let ink = tm.get_color("foreground");
+        let stripe = tm.get_color("muted");
         let paper = tm.get_color("widget_face_active");
         canvas.set_draw_color(paper);
         let _ = canvas.fill_rect(*rect);
         harbour_shell::ui::draw_rect(canvas, *rect, ink);
-        let right = rect.x() + rect.width() as i32 - 2;
-        let title = fit_text(fs, title, rect.width() as i32 - 55);
+
+        let max_title_width = (rect.width() as i32 - 68).max(8);
+        let title = fit_system_text(fs, title, max_title_width);
         let title_w = fs.measure_system_text(&title);
-        let title_x = (rect.x() + (rect.width() as i32 - title_w) / 2).max(rect.x() + 20);
+        let title_x = rect.x() + (rect.width() as i32 - title_w) / 2;
+        let left_begin = rect.x() + 21;
+        let left_end = title_x - 6;
+        let right_begin = title_x + title_w + 6;
+        let right_end = rect.x() + rect.width() as i32 - 6;
+
         for offset in [4, 7, 10] {
-            harbour_shell::ui::line(
-                canvas,
-                rect.x() + 19,
-                rect.y() + offset,
-                right - 4,
-                rect.y() + offset,
-                ink,
-            );
+            if left_begin <= left_end {
+                harbour_shell::ui::line(
+                    canvas,
+                    left_begin,
+                    rect.y() + offset,
+                    left_end,
+                    rect.y() + offset,
+                    stripe,
+                );
+            }
+            if right_begin <= right_end {
+                harbour_shell::ui::line(
+                    canvas,
+                    right_begin,
+                    rect.y() + offset,
+                    right_end,
+                    rect.y() + offset,
+                    stripe,
+                );
+            }
         }
-        canvas.set_draw_color(paper);
-        let _ = canvas.fill_rect(Rect::new(
-            title_x - 4,
-            rect.y() + 1,
-            (title_w + 8).max(1) as u32,
-            13,
-        ));
-        fs.draw_system_text(canvas, title_x, rect.y() + 1, &title, amber);
-        harbour_shell::ui::draw_rect(canvas, Rect::new(rect.x() + 6, rect.y() + 4, 8, 8), amber);
+
+        fs.draw_system_text(canvas, title_x, rect.y() + 1, &title, ink);
+        harbour_shell::ui::draw_rect(canvas, Rect::new(rect.x() + 6, rect.y() + 3, 9, 9), ink);
         harbour_shell::ui::line(
             canvas,
             rect.x() + 1,
             rect.y() + TITLEBAR_H,
-            right,
+            rect.x() + rect.width() as i32 - 2,
             rect.y() + TITLEBAR_H,
             ink,
         );
@@ -1296,6 +1304,22 @@ fn editor_title(path: &Option<String>, dirty: bool) -> String {
     match path {
         Some(path) => format!("TextEditor{} - {}", marker, path),
         None => format!("TextEditor{} - /Untitled.txt", marker),
+    }
+}
+
+fn fit_system_text(fs: &FontSystem, text: &str, max_w: i32) -> String {
+    if fs.measure_system_text(text) <= max_w {
+        return text.to_string();
+    }
+    let mut prefix = text.to_string();
+    let ellipsis = "...";
+    while !prefix.is_empty() && fs.measure_system_text(&(prefix.clone() + ellipsis)) > max_w {
+        prefix.pop();
+    }
+    if prefix.is_empty() {
+        ellipsis.to_string()
+    } else {
+        prefix + ellipsis
     }
 }
 
