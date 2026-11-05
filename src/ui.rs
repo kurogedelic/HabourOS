@@ -46,14 +46,9 @@ pub fn line(c: &mut Canvas<Window>, x1: i32, y1: i32, x2: i32, y2: i32, col: Col
 /// 1-bit 風のポインタカーソルを描画する。
 /// Small Classic Mac-style pointer for 320×170 displays.
 /// Hotspot is the upper-left pixel, matching SDL pointer coordinates.
-pub fn draw_compact_pointer_cursor(
-    c: &mut Canvas<Window>,
-    x: i32,
-    y: i32,
-    outline: Color,
-    paper: Color,
-    shadow: Color,
-) {
+pub fn draw_compact_pointer_cursor(c: &mut Canvas<Window>, x: i32, y: i32) {
+    // The classic black-on-white pointer is fully opaque: no tinted shadow,
+    // blended edge or second displaced contour. Pixel (0, 0) is the hotspot.
     const ARROW: [&str; 16] = [
         "X           ",
         "XX          ",
@@ -64,17 +59,16 @@ pub fn draw_compact_pointer_cursor(
         "XFFFFFX     ",
         "XFFFFFFX    ",
         "XFFFFFFFX   ",
-        "XFFFXXXXX   ",
-        "XFFX XFFX   ",
-        "XFX  XFFX   ",
-        "XX    XFFX  ",
-        "X     XFFX  ",
-        "       XX   ",
-        "            ",
+        "XFFFFFFFFX  ",
+        "XFFFFFFXXX  ",
+        "XFFX  XFFX  ",
+        "XFX   XFFX  ",
+        "XX     XFFX ",
+        "       XFFX ",
+        "        XX  ",
     ];
-    draw_pointer_pixels(c, x + 1, y + 1, &ARROW, 'X', shadow);
-    draw_pointer_pixels(c, x, y, &ARROW, 'F', paper);
-    draw_pointer_pixels(c, x, y, &ARROW, 'X', outline);
+    draw_pointer_pixels(c, x, y, &ARROW, 'F', Color::RGB(255, 255, 255));
+    draw_pointer_pixels(c, x, y, &ARROW, 'X', Color::RGB(0, 0, 0));
 }
 
 pub fn draw_pointer_cursor(
