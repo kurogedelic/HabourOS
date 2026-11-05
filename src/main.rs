@@ -837,11 +837,7 @@ fn main() -> Result<(), String> {
         if !compact_screen(out_w, out_h) || pointer_visible {
             let pointer = os.pointer();
             if compact_screen(out_w, out_h) {
-                harbour_shell::ui::draw_compact_pointer_cursor(
-                    &mut canvas,
-                    pointer.x,
-                    pointer.y,
-                );
+                harbour_shell::ui::draw_compact_pointer_cursor(&mut canvas, pointer.x, pointer.y);
             } else {
                 draw_pointer(&mut canvas, &tm, pointer.x, pointer.y);
             }
@@ -1118,11 +1114,7 @@ fn draw_app_window(
         }
 
         fs.draw_system_text(canvas, title_x, rect.y() + 1, &title, ink);
-        harbour_shell::ui::draw_rect(
-            canvas,
-            Rect::new(rect.x() + 6, rect.y() + 3, 9, 9),
-            ink,
-        );
+        harbour_shell::ui::draw_rect(canvas, Rect::new(rect.x() + 6, rect.y() + 3, 9, 9), ink);
         harbour_shell::ui::line(
             canvas,
             rect.x() + 1,
@@ -1321,9 +1313,7 @@ fn fit_system_text(fs: &FontSystem, text: &str, max_w: i32) -> String {
     }
     let mut prefix = text.to_string();
     let ellipsis = "...";
-    while !prefix.is_empty()
-        && fs.measure_system_text(&(prefix.clone() + ellipsis)) > max_w
-    {
+    while !prefix.is_empty() && fs.measure_system_text(&(prefix.clone() + ellipsis)) > max_w {
         prefix.pop();
     }
     if prefix.is_empty() {
