@@ -165,47 +165,81 @@ pub fn draw_panel(
     let _ = c.draw_rect(Rect::new(rx, y, btn_w as u32, title_h));
 }
 
-/// Two lines at most, using measured glyph widths. Prefer word/camel boundaries.
+/// Render icon labels on up to two lines without splitting ordinary words.
+/// Prefer spaces, CamelCase, or filename separators; ellipsize a long
+/// unbreakable word rather than producing unreadable fragments.
 pub fn wrap_icon_label<F>(label: &str, max_width: i32, measure: F) -> Vec<String>
 where
     F: Fn(&str) -> i32,
 {
     let label = label.trim();
-    if label.is_empty() || max_width <= 0 { return Vec::new(); }
-    if measure(label) <= max_width { return vec![label.to_string()]; }
+    if label.is_empty() || max_width <= 0 {
+        return Vec::new();
+    }
+    if measure(label) <= max_width {
+        return vec![label.to_string()];
+    }
+
     let chars: Vec<char> = label.chars().collect();
     let mut best: Option<(i32, String, String)> = None;
     for i in 1..chars.len() {
-        let left = chars[..i].iter().collect::<String>().trim_end().to_string();
-        let right = chars[i..].iter().collect::<String>().trim_start().to_string();
-        if left.is_empty() || right.is_empty() || measure(&left) > max_width { continue; }
-        let clipped = clip_icon_label(&right, max_width, &measure);
-        if clipped.is_empty() { continue; }
-        let natural = chars[i].is_uppercase() || chars[i-1].is_whitespace()
-            || matches!(chars[i-1], '-' | '_' | '/');
+        let previous = chars[i - 1];
+        let current = chars[i];
+        let boundary = previous.is_whitespace()
+            || matches!(previous, '_' | '-' | '/')
+            || (previous.is_lowercase() && current.is_uppercase());
+        if !boundary {
+            continue;
+        }
+        let left: String = chars[..i]
+            .iter()
+            .collect::<String>()
+            .trim_end_matches(|c: char| c.is_whitespace() || c == '_' || c == '-')
+            .to_string();
+        let right: String = chars[i..]
+            .iter()
+            .collect::<String>()
+            .trim_start_matches(|c: char| c.is_whitespace() || c == '_' || c == '-')
+            .to_string();
+        if left.is_empty() || right.is_empty() || measure(&left) > max_width {
+            continue;
+        }
+        let shown_right = clip_icon_label(&right, max_width, &measure);
+        if shown_right.is_empty() {
+            continue;
+        }
+        // Full words are always preferred to clipped ones. For ties, balance.
+        let hidden = right.chars().count().saturating_sub(shown_right.trim_end_matches("...").chars().count());
         let score = if measure(&right) > max_width {
-            1000 - (i as i32 + clipped.chars().count() as i32) * 20
-                + (measure(&left) - measure(&clipped)).abs()
+            1000 + hidden as i32 * 40
         } else {
-            (if natural { 0 } else { 60 })
-                + (measure(&left) - measure(&clipped)).abs()
-        };
-        if best.as_ref().map_or(true, |(prev, _, _)| score < *prev) {
-            best = Some((score, left, clipped));
+            0
+        } + (measure(&left) - measure(&shown_right)).abs();
+        if best.as_ref().map_or(true, |(old, _, _)| score < *old) {
+            best = Some((score, left, shown_right));
         }
     }
-    if let Some((_, a, b)) = best { vec![a, b] }
-    else { vec![clip_icon_label(label, max_width, &measure)] }
+    match best {
+        Some((_, left, right)) => vec![left, right],
+        None => vec![clip_icon_label(label, max_width, &measure)],
+    }
 }
 
 fn clip_icon_label<F>(label: &str, max_width: i32, measure: &F) -> String
-where F: Fn(&str) -> i32
+where
+    F: Fn(&str) -> i32,
 {
-    if measure(label) <= max_width { return label.to_string(); }
-    if measure("...") > max_width { return String::new(); }
+    if measure(label) <= max_width {
+        return label.to_string();
+    }
+    if measure("...") > max_width {
+        return String::new();
+    }
     let mut result = String::new();
     for ch in label.chars() {
-        if measure(&format!("{}{}...", result, ch)) > max_width { break; }
+        if measure(&format!("{}{}...", result, ch)) > max_width {
+            break;
+        }
         result.push(ch);
     }
     result.push_str("...");
@@ -216,21 +250,35 @@ where F: Fn(&str) -> i32
 mod icon_label_tests {
     use super::wrap_icon_label;
 
-    fn width(text: &str) -> i32 { text.chars().count() as i32 * 6 }
+    fn width(text: &str) -> i32 {
+        text.chars().count() as i32 * 6
+    }
 
     #[test]
-    fn splits_camelcase_at_word_boundary() {
-        assert_eq!(wrap_icon_label("TextEditor", 52, width), vec!["Text", "Editor"]);
+    fn wraps_text_editor_on_word_boundary() {
+        assert_eq!(wrap_icon_label("Text Editor", 64, width), vec!["Text", "Editor"]);
     }
+
     #[test]
-    fn balances_other_long_labels() {
-        assert_eq!(wrap_icon_label("Dictionary", 52, width), vec!["Dicti", "onary"]);
+    fn does_not_break_short_unspaced_words() {
+        assert_eq!(wrap_icon_label("Dictionary", 64, width), vec!["Dictionary"]);
+        assert_eq!(wrap_icon_label("Calculator", 64, width), vec!["Calculator"]);
     }
+
     #[test]
-    fn ellipsizes_long_filenames() {
-        let lines = wrap_icon_label("very_long_filename_for_notes.txt", 52, width);
-        assert_eq!(lines.len(), 2);
-        assert!(lines[1].ends_with("..."));
-        assert!(lines.iter().all(|line| width(line) <= 52));
+    fn ellipsizes_unbreakable_words_instead_of_splitting() {
+        assert_eq!(wrap_icon_label("Dictionary", 52, width), vec!["Dicti..."]);
+    }
+
+    #[test]
+    fn long_file_names_fit_in_at_most_two_lines() {
+        let lines = wrap_icon_label("very_long_filename_for_notes.txt", 64, width);
+        assert!(lines.len() <= 2);
+        assert!(lines.iter().all(|line| width(line) <= 64));
+    }
+
+    #[test]
+    fn short_names_stay_on_one_line() {
+        assert_eq!(wrap_icon_label("Files", 64, width), vec!["Files"]);
     }
 }
