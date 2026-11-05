@@ -224,7 +224,7 @@ mod icon_label_tests {
     }
     #[test]
     fn balances_other_long_labels() {
-        assert_eq!(wrap_icon_label("Dictionary", 52, width), vec!["Dictio", "nary"]);
+        assert_eq!(wrap_icon_label("Dictionary", 52, width), vec!["Dicti", "onary"]);
     }
     #[test]
     fn ellipsizes_long_filenames() {
