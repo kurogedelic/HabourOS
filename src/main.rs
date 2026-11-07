@@ -82,8 +82,8 @@ fn main() -> Result<(), String> {
 
     // Framebuffer mode renders into an SDL software canvas, then copies the
     // pixels to /dev/fb0. No compositor or separate LVGL UI is required.
-    let fbdev_requested = cfg!(target_os = "linux")
-        && std::env::var("HARBOUR_FBDEV").is_ok_and(|p| !p.is_empty());
+    let fbdev_requested =
+        cfg!(target_os = "linux") && std::env::var("HARBOUR_FBDEV").is_ok_and(|p| !p.is_empty());
     let builder = window.into_canvas();
     let mut canvas = if fbdev_requested {
         builder.software().build()
