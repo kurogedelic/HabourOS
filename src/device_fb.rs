@@ -139,17 +139,13 @@ impl Framebuffer {
             || fix.visual != FB_VISUAL_TRUECOLOR
             || var.grayscale != 0
             || var.nonstd != 0
-            || [var.red, var.green, var.blue, var.transp]
-                .iter()
-                .any(|f| f.msb_right != 0 || f.length > 8 || f.offset + f.length > var.bits_per_pixel)
+            || [var.red, var.green, var.blue, var.transp].iter().any(|f| {
+                f.msb_right != 0 || f.length > 8 || f.offset + f.length > var.bits_per_pixel
+            })
         {
             return Err(format!(
                 "unsupported framebuffer format: {} bpp, visual {}, RGB offsets ({},{},{})",
-                var.bits_per_pixel,
-                fix.visual,
-                var.red.offset,
-                var.green.offset,
-                var.blue.offset
+                var.bits_per_pixel, fix.visual, var.red.offset, var.green.offset, var.blue.offset
             ));
         }
         let bytes_per_pixel = (var.bits_per_pixel / 8) as usize;
@@ -159,7 +155,9 @@ impl Framebuffer {
             .saturating_mul(stride)
             .saturating_add(row_end);
         if row_end > stride || last_byte > fix.smem_len as usize {
-            return Err(format!("{path}: framebuffer stride or memory size is too small"));
+            return Err(format!(
+                "{path}: framebuffer stride or memory size is too small"
+            ));
         }
 
         eprintln!(
@@ -196,11 +194,13 @@ impl Framebuffer {
                     .copy_from_slice(&pixel.to_ne_bytes()[..self.bytes_per_pixel]);
             }
             let offset = ((y + self.var.yoffset as usize) * self.fix.line_length as usize
-                + self.var.xoffset as usize * self.bytes_per_pixel)
-                as u64;
+                + self.var.xoffset as usize * self.bytes_per_pixel) as u64;
             let mut written = 0;
             while written < self.row.len() {
-                match self.file.write_at(&self.row[written..], offset + written as u64) {
+                match self
+                    .file
+                    .write_at(&self.row[written..], offset + written as u64)
+                {
                     Ok(0) => return Err("short framebuffer write".to_string()),
                     Ok(n) => written += n,
                     Err(e) if e.kind() == io::ErrorKind::Interrupted => continue,
@@ -466,11 +466,25 @@ mod tests {
     #[test]
     fn rgb565_pack() {
         assert_eq!(
-            pack_channel(255, Bitfield { offset: 11, length: 5, msb_right: 0 }),
+            pack_channel(
+                255,
+                Bitfield {
+                    offset: 11,
+                    length: 5,
+                    msb_right: 0
+                }
+            ),
             0xf800
         );
         assert_eq!(
-            pack_channel(255, Bitfield { offset: 5, length: 6, msb_right: 0 }),
+            pack_channel(
+                255,
+                Bitfield {
+                    offset: 5,
+                    length: 6,
+                    msb_right: 0
+                }
+            ),
             0x07e0
         );
     }
