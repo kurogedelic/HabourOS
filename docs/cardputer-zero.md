@@ -1,8 +1,8 @@
 # Cardputer Zero: experimental Linux port
 
-> **Not verified on a physical Cardputer Zero.** This is an initial ARM64
-> build and SDL2/Wayland launch path, not a complete framebuffer-native port
-> and not a replacement operating-system image.
+> **Not verified on a physical Cardputer Zero.** This is an experimental ARM64
+> SDL2/Linux framebuffer + evdev application port. It does not replace the
+> device's Linux image or default app launcher.
 
 ## Target and existing code
 
@@ -110,41 +110,74 @@ CARGO_BUILD_JOBS=1 cargo build --locked --release --bin harbour_shell
 
 ## First launch
 
-The stock Cardputer Zero uses a Linux framebuffer (often `/dev/fb0`).
-**SDL2 has no SDL1-style `fbcon` backend**. This experimental version instead
-tries a Wayland session, if one is running; it does **not** open `/dev/fb0`
-itself. Some community SDL2 demos have failed to start on the device, so a
-successful build is not proof of hardware support.
+The default firmware exposes an ST7789V Linux framebuffer (commonly
+`/dev/fb0`) and a TCA8418 kernel evdev keyboard. It **does not require
+Wayland** to run HarbourOS. This port keeps the existing Rust/SDL2 drawing
+and windows, renders them into an SDL software canvas, then copies RGB24
+pixels into the framebuffer's reported RGB bitfields. It uses the framebuffer
+driver's actual stride and visible offsets. No LVGL rewrite, root filesystem
+replacement, or separate GUI is involved.
 
-From a shell belonging to the running Wayland session:
+The default launch script automatically chooses:
+
+- `SDL_VIDEODRIVER=dummy`, `HARBOUR_FBDEV=/dev/fb0`: when no
+  `WAYLAND_DISPLAY` is present. Uses our framebuffer/evdev adapter.
+- `SDL_VIDEODRIVER=wayland`: only when a Wayland session is advertised.
+  The SDL2 Wayland path remains available for other Linux hosts.
+
+From a **safe application session** where APPLaunch has released the display:
 
 ```sh
 chmod +x ./run-cardputer-zero.sh
 ./run-cardputer-zero.sh
 ```
 
-When connecting via SSH, first determine the graphical user's UID and active
-Wayland socket. For example, **only if the graphical session uses these values**:
+The built-in APPLaunch service owns the display by default. **Do not launch
+HarbourOS on top of an active launcher or overwrite `APPLaunch.service`.**
+Use its external application handoff, or arrange a temporary manual test
+session that releases display ownership. This script does not modify
+systemd services, device configuration, or the boot image.
+
+If auto detection chooses the wrong display path:
 
 ```sh
-XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-0 ./run-cardputer-zero.sh
+SDL_VIDEODRIVER=dummy HARBOUR_FBDEV=/dev/fb0 \
+  HARBOUR_INPUT_DEVICE=/dev/input/by-path/platform-3f804000.i2c-event \
+  ./run-cardputer-zero.sh
 ```
 
-The script defaults to `SDL_VIDEODRIVER=wayland`, `HARBOUR_WIDTH=320`,
-`HARBOUR_HEIGHT=170`, `HARBOUR_FULLSCREEN=1`, and the Cardputer Zero theme;
-all are overrideable.
-It saves VFS data under `$XDG_DATA_HOME/harbour-os/` (or
-`~/.local/share/harbour-os/`), instead of inside the executable directory.
+The default keyboard path is taken from the M5Stack launcher reference.
+If it differs, check `ls -l /dev/input/by-path/` and `cat
+/proc/bus/input/devices`; pass the matching `/dev/input/event*` path in
+`HARBOUR_INPUT_DEVICE`. The user running HarbourOS needs write permission
+on the framebuffer and read permission on the keyboard event device.
+No `sudo` is needed if those permissions are correctly configured.
 
-When the system launcher owns the display, starting HarbourOS may require
-using the launcher's normal app-management mechanism. Do not replace
-`APPLaunch.service` or force a framebuffer takeover during this first test.
+For an existing Wayland session, use:
+
+```sh
+SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=wayland-0 \
+  XDG_RUNTIME_DIR=/run/user/1000 ./run-cardputer-zero.sh
+```
+
+Use the actual session's `WAYLAND_DISPLAY` and UID, not the example values.
+
+Supported direct-fbdev pixel formats initially are 16/24/32-bit truecolor
+with standard Linux bitfields and a visible 320×170 image. Unrecognized
+formats, missing permissions, and size mismatches fail with explicit errors
+rather than writing an unknown pixel layout. If the kernel display reports
+a different format, collect the error and framebuffer metadata on the device
+before extending the adapter.
+
+VFS data is saved under `$XDG_DATA_HOME/harbour-os/` (or
+`~/.local/share/harbour-os/`); this is independent of the executable bundle.
 
 ## Keyboard and UI checks
 
 The Cardputer Zero quick-start documents arrow navigation as
-**Fn + F / X / Z / C** and an **OK/ENTER** key. The Linux input mapping must
-expose these as SDL2 arrow and Enter events for HarbourOS to use them.
+**Fn + F / X / Z / C** and an **OK/ENTER** key. The evdev adapter reads the keycodes supplied by the kernel and translates
+them to SDL2 events. FN remapping is handled by the kernel keyboard driver;
+verify the resulting codes on real hardware.
 The OS already supports keyboard navigation; the physical Ctrl shortcuts
 (`Ctrl+S`, `Ctrl+B`, etc.) may need a dedicated Cardputer mapping.
 
