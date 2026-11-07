@@ -19,18 +19,45 @@ if [[ ! -x "$BIN" ]]; then
   exit 1
 fi
 
-# Cardputer Zero is AArch64 Linux, not the ESP32-based Cardputer.
-# The stock display is a framebuffer; SDL2 does not support SDL1's 'fbcon'.
-# This first-stage launcher tries the available Wayland compositor.
-export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-wayland}"
+# Default to the stock device's Linux framebuffer when no Wayland
+# compositor is available. SDL2 still draws the entire HarbourOS UI; its
+# software canvas is copied to fbdev by the optional Rust device adapter.
+if [[ -z "${SDL_VIDEODRIVER:-}" ]]; then
+  if [[ -n "${WAYLAND_DISPLAY:-}" && -z "${HARBOUR_FBDEV:-}" ]]; then
+    export SDL_VIDEODRIVER=wayland
+  else
+    export SDL_VIDEODRIVER=dummy
+  fi
+fi
+if [[ "$SDL_VIDEODRIVER" == "dummy" ]]; then
+  export HARBOUR_FBDEV="${HARBOUR_FBDEV:-/dev/fb0}"
+  export HARBOUR_INPUT_DEVICE="${HARBOUR_INPUT_DEVICE:-/dev/input/by-path/platform-3f804000.i2c-event}"
+elif [[ -n "${HARBOUR_FBDEV:-}" ]]; then
+  echo "HARBOUR_FBDEV requires SDL_VIDEODRIVER=dummy." >&2
+  exit 1
+fi
 export HARBOUR_WIDTH="${HARBOUR_WIDTH:-320}"
 export HARBOUR_HEIGHT="${HARBOUR_HEIGHT:-170}"
 export HARBOUR_FULLSCREEN="${HARBOUR_FULLSCREEN:-1}"
 export HARBOUR_THEME="${HARBOUR_THEME:-assets/themes/cardputer-zero.yaml}"
 
 if [[ "$SDL_VIDEODRIVER" == "wayland" && -z "${WAYLAND_DISPLAY:-}" ]]; then
-  echo "Warning: WAYLAND_DISPLAY is not set; a running Wayland session is required." >&2
-  echo "From SSH, XDG_RUNTIME_DIR and WAYLAND_DISPLAY must point to the actual user session." >&2
+  echo "Wayland selected but WAYLAND_DISPLAY is unset." >&2
+  echo "Use SDL_VIDEODRIVER=dummy for direct fbdev mode or set the real Wayland session." >&2
+  exit 1
+fi
+if [[ "$SDL_VIDEODRIVER" == "dummy" ]]; then
+  if [[ ! -e "$HARBOUR_FBDEV" ]]; then
+    echo "Framebuffer not found: $HARBOUR_FBDEV" >&2
+    exit 1
+  fi
+  if [[ ! -w "$HARBOUR_FBDEV" ]]; then
+    echo "Framebuffer not writable: $HARBOUR_FBDEV (check device permissions)" >&2
+    exit 1
+  fi
+  if [[ ! -r "$HARBOUR_INPUT_DEVICE" ]]; then
+    echo "Warning: keyboard unavailable: $HARBOUR_INPUT_DEVICE" >&2
+  fi
 fi
 
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"

@@ -1,3 +1,6 @@
+#[cfg(target_os = "linux")]
+mod device_fb;
+
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::{Keycode, Mod};
 use sdl2::pixels::Color;
@@ -77,14 +80,45 @@ fn main() -> Result<(), String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    let mut canvas = window
-        .into_canvas()
-        .present_vsync()
-        .build()
-        .map_err(|e| e.to_string())?;
-    if boot_fullscreen {
+    // Framebuffer mode renders into an SDL software canvas, then copies the
+    // pixels to /dev/fb0. No compositor or separate LVGL UI is required.
+    let fbdev_requested =
+        cfg!(target_os = "linux") && std::env::var("HARBOUR_FBDEV").is_ok_and(|p| !p.is_empty());
+    let builder = window.into_canvas();
+    let mut canvas = if fbdev_requested {
+        builder.software().build()
+    } else {
+        builder.present_vsync().build()
+    }
+    .map_err(|e| e.to_string())?;
+    if boot_fullscreen && !fbdev_requested {
         let _ = canvas.window_mut().set_fullscreen(FullscreenType::Desktop);
     }
+
+    #[cfg(target_os = "linux")]
+    let mut framebuffer = if fbdev_requested {
+        Some(device_fb::Framebuffer::open(
+            &std::env::var("HARBOUR_FBDEV").unwrap(),
+            boot_w,
+            boot_h,
+        )?)
+    } else {
+        None
+    };
+    #[cfg(target_os = "linux")]
+    let mut physical_keyboard = if framebuffer.is_some() {
+        let path = std::env::var("HARBOUR_INPUT_DEVICE")
+            .unwrap_or_else(|_| "/dev/input/by-path/platform-3f804000.i2c-event".to_string());
+        match device_fb::Keyboard::open(&path) {
+            Ok(keyboard) => Some(keyboard),
+            Err(err) => {
+                eprintln!("[cardputer] {err}; keyboard unavailable");
+                None
+            }
+        }
+    } else {
+        None
+    };
 
     let texture_creator = canvas.texture_creator();
 
@@ -142,7 +176,16 @@ fn main() -> Result<(), String> {
     os.input_pointer(PointerInput::move_to(mouse.x(), mouse.y(), 0, 0));
 
     'main: loop {
-        for e in events.poll_iter() {
+        #[cfg(target_os = "linux")]
+        let device_events = if let Some(keyboard) = physical_keyboard.as_mut() {
+            keyboard.poll()?
+        } else {
+            Vec::new()
+        };
+        #[cfg(not(target_os = "linux"))]
+        let device_events: Vec<Event> = Vec::new();
+
+        for e in events.poll_iter().chain(device_events) {
             match e {
                 Event::Quit { .. } => break 'main,
 
@@ -843,6 +886,10 @@ fn main() -> Result<(), String> {
             }
         }
 
+        #[cfg(target_os = "linux")]
+        if let Some(fb) = framebuffer.as_mut() {
+            fb.present(&canvas)?;
+        }
         canvas.present();
         sdl.mouse().show_cursor(false);
         frame_wait();
