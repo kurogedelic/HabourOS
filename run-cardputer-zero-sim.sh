@@ -12,6 +12,7 @@ export HARBOUR_WIDTH=320
 export HARBOUR_HEIGHT=170
 export HARBOUR_FULLSCREEN=0
 export HARBOUR_THEME=assets/themes/cardputer-zero.yaml
+export HARBOUR_CARDPUTER_KEYS=1
 
 if [[ -n "${HARBOUR_BIN:-}" ]]; then
   exec "$HARBOUR_BIN" "$@"
