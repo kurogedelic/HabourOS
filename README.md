@@ -85,13 +85,17 @@ python3 -m http.server 8080 --directory web
 
 ## Cardputer Zero (experimental)
 
-The Linux/AArch64 Cardputer Zero is an experimental target. A 320x170
-launcher, native-resolution Classic Mac-inspired desktop (pale amber background,
-right-aligned 2×3 icon grid and dark amber text), and an ARM64 release-bundle workflow
-are available, but physical hardware support has not been verified. The separate
-[flat Cardputer Zero simulator](web/cardputer-zero.html) runs the same WASM
-binary in the supplied 46-key enclosure at native 320×170. See
-[Cardputer Zero setup and limitations](docs/cardputer-zero.md).
+The Linux/AArch64 Cardputer Zero is an experimental target. Its 320×170
+desktop and ARM64 release build share the same Rust/SDL2 UI with the Web
+simulator. An optional direct Linux framebuffer and kernel evdev adapter is
+enabled by `HARBOUR_FBDEV=/dev/fb0`. The `run-cardputer-zero.sh`
+launcher now **defaults to framebuffer**, not Wayland.
+**Physical hardware support has not been verified.** Do not replace the
+device's default launcher or launch both apps on the display simultaneously.
+The [flat Cardputer Zero simulator](web/cardputer-zero.html) remains unchanged.
+To run the same 320×170 UI in a local SDL2 window, use
+`bash run-cardputer-zero-sim.sh`. This is independent of M5Stack's LVGL
+simulator. See [Cardputer Zero setup and limitations](docs/cardputer-zero.md).
 
 ## Virtual Filesystem
 

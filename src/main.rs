@@ -1,3 +1,6 @@
+#[cfg(target_os = "linux")]
+mod device_fb;
+
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::{Keycode, Mod};
 use sdl2::pixels::Color;
@@ -77,14 +80,47 @@ fn main() -> Result<(), String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    let mut canvas = window
-        .into_canvas()
-        .present_vsync()
-        .build()
-        .map_err(|e| e.to_string())?;
-    if boot_fullscreen {
+    // Framebuffer mode renders into an SDL software canvas, then copies the
+    // pixels to /dev/fb0. No compositor or separate LVGL UI is required.
+    let fbdev_requested =
+        cfg!(target_os = "linux") && std::env::var("HARBOUR_FBDEV").is_ok_and(|p| !p.is_empty());
+    // M5's launcher uses F/X/Z/C as cursor substitutes on its home screen.
+    // Limit this to our desktop; the editor must keep these as literal text.
+    let cardputer_navigation =
+        fbdev_requested || std::env::var("HARBOUR_CARDPUTER_KEYS").as_deref() == Ok("1");
+    // A headless SDL dummy window uses the same software renderer as fbdev.
+    // This lets CI exercise the exact renderer without opening /dev/fb0.
+    let software_renderer =
+        fbdev_requested || std::env::var("SDL_VIDEODRIVER").as_deref() == Ok("dummy");
+    let builder = window.into_canvas();
+    let mut canvas = if software_renderer {
+        builder.software().build()
+    } else {
+        builder.present_vsync().build()
+    }
+    .map_err(|e| e.to_string())?;
+    if boot_fullscreen && !fbdev_requested {
         let _ = canvas.window_mut().set_fullscreen(FullscreenType::Desktop);
     }
+
+    #[cfg(target_os = "linux")]
+    let mut framebuffer = if fbdev_requested {
+        Some(device_fb::Framebuffer::open(
+            &std::env::var("HARBOUR_FBDEV").unwrap(),
+            boot_w,
+            boot_h,
+        )?)
+    } else {
+        None
+    };
+    #[cfg(target_os = "linux")]
+    let mut physical_keyboard = if framebuffer.is_some() {
+        let path = std::env::var("HARBOUR_INPUT_DEVICE")
+            .unwrap_or_else(|_| "/dev/input/by-path/platform-3f804000.i2c-event".to_string());
+        Some(device_fb::Keyboard::open(&path)?)
+    } else {
+        None
+    };
 
     let texture_creator = canvas.texture_creator();
 
@@ -137,12 +173,30 @@ fn main() -> Result<(), String> {
     let mut pointer_keys = false;
     let mut pointer_visible = false;
 
+    // CI smoke run: exercise actual SDL initialization and the complete
+    // 320x170 drawing loop in a headless dummy window without a device.
+    // Does not affect interactive runs unless explicitly requested.
+    let smoke_frames = std::env::var("HARBOUR_SMOKE_FRAMES")
+        .ok()
+        .and_then(|v| v.parse::<u32>().ok())
+        .filter(|&v| v > 0);
+    let mut rendered_frames = 0_u32;
+
     let mut events = sdl.event_pump()?;
     let mouse = events.mouse_state();
     os.input_pointer(PointerInput::move_to(mouse.x(), mouse.y(), 0, 0));
 
     'main: loop {
-        for e in events.poll_iter() {
+        #[cfg(target_os = "linux")]
+        let device_events = if let Some(keyboard) = physical_keyboard.as_mut() {
+            keyboard.poll()?
+        } else {
+            Vec::new()
+        };
+        #[cfg(not(target_os = "linux"))]
+        let device_events: Vec<Event> = Vec::new();
+
+        for e in events.poll_iter().chain(device_events) {
             match e {
                 Event::Quit { .. } => break 'main,
 
@@ -267,6 +321,18 @@ fn main() -> Result<(), String> {
                         continue;
                     }
                     let Some(key) = keycode else { continue };
+                    let key = if cardputer_navigation && matches!(mode, Mode::Desktop | Mode::Snake)
+                    {
+                        match key {
+                            Keycode::F => Keycode::Up,
+                            Keycode::X => Keycode::Down,
+                            Keycode::Z => Keycode::Left,
+                            Keycode::C => Keycode::Right,
+                            _ => key,
+                        }
+                    } else {
+                        key
+                    };
                     os.input_key(KeyInput::new(key, keymod));
 
                     // 共通: Ctrl+Q 終了、F11 フルスクリーン
@@ -843,7 +909,15 @@ fn main() -> Result<(), String> {
             }
         }
 
+        #[cfg(target_os = "linux")]
+        if let Some(fb) = framebuffer.as_mut() {
+            fb.present(&canvas)?;
+        }
         canvas.present();
+        rendered_frames = rendered_frames.saturating_add(1);
+        if smoke_frames.is_some_and(|count| rendered_frames >= count) {
+            break 'main;
+        }
         sdl.mouse().show_cursor(false);
         frame_wait();
     }

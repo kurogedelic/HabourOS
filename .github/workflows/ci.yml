@@ -33,6 +33,15 @@ jobs:
       - name: Build debug
         run: cargo build --all-targets
 
+      - name: Cardputer 320x170 SDL software-renderer smoke test
+        env:
+          SDL_VIDEODRIVER: dummy
+          HARBOUR_WIDTH: "320"
+          HARBOUR_HEIGHT: "170"
+          HARBOUR_THEME: assets/themes/cardputer-zero.yaml
+          HARBOUR_SMOKE_FRAMES: "2"
+        run: ./target/debug/harbour_shell
+
       - name: Build release app
         run: cargo build --release --bin harbour_shell
 
