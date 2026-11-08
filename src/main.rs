@@ -321,7 +321,8 @@ fn main() -> Result<(), String> {
                         continue;
                     }
                     let Some(key) = keycode else { continue };
-                    let key = if cardputer_navigation && matches!(mode, Mode::Desktop | Mode::Snake) {
+                    let key = if cardputer_navigation && matches!(mode, Mode::Desktop | Mode::Snake)
+                    {
                         match key {
                             Keycode::F => Keycode::Up,
                             Keycode::X => Keycode::Down,
