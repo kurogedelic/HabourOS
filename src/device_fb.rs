@@ -256,7 +256,10 @@ fn encode_rgb24_row(
     if src.len() % 3 != 0 || dest.len() != src.len() / 3 * bytes_per_pixel {
         return Err("invalid RGB24 source or framebuffer row length".to_string());
     }
-    for (rgb, native) in src.chunks_exact(3).zip(dest.chunks_exact_mut(bytes_per_pixel)) {
+    for (rgb, native) in src
+        .chunks_exact(3)
+        .zip(dest.chunks_exact_mut(bytes_per_pixel))
+    {
         let packed = pack_channel(rgb[0], var.red)
             | pack_channel(rgb[1], var.green)
             | pack_channel(rgb[2], var.blue)
@@ -551,12 +554,27 @@ mod tests {
             xres_virtual: 2,
             yres_virtual: 1,
             bits_per_pixel: 16,
-            red: Bitfield { offset: 11, length: 5, ..Default::default() },
-            green: Bitfield { offset: 5, length: 6, ..Default::default() },
-            blue: Bitfield { offset: 0, length: 5, ..Default::default() },
+            red: Bitfield {
+                offset: 11,
+                length: 5,
+                ..Default::default()
+            },
+            green: Bitfield {
+                offset: 5,
+                length: 6,
+                ..Default::default()
+            },
+            blue: Bitfield {
+                offset: 0,
+                length: 5,
+                ..Default::default()
+            },
             ..Default::default()
         };
-        let fix = FixScreeninfo { visual: FB_VISUAL_TRUECOLOR, ..Default::default() };
+        let fix = FixScreeninfo {
+            visual: FB_VISUAL_TRUECOLOR,
+            ..Default::default()
+        };
         assert!(valid_rgb_format(&v, &fix));
         let mut pixels = [0_u8; 4];
         encode_rgb24_row(&[255, 0, 0, 0, 0, 255], &mut pixels, 2, &v).unwrap();
@@ -570,13 +588,32 @@ mod tests {
     fn framebuffer_bgra8888_conversion() {
         let v = VarScreeninfo {
             bits_per_pixel: 32,
-            red: Bitfield { offset: 16, length: 8, ..Default::default() },
-            green: Bitfield { offset: 8, length: 8, ..Default::default() },
-            blue: Bitfield { offset: 0, length: 8, ..Default::default() },
-            transp: Bitfield { offset: 24, length: 8, ..Default::default() },
+            red: Bitfield {
+                offset: 16,
+                length: 8,
+                ..Default::default()
+            },
+            green: Bitfield {
+                offset: 8,
+                length: 8,
+                ..Default::default()
+            },
+            blue: Bitfield {
+                offset: 0,
+                length: 8,
+                ..Default::default()
+            },
+            transp: Bitfield {
+                offset: 24,
+                length: 8,
+                ..Default::default()
+            },
             ..Default::default()
         };
-        let fix = FixScreeninfo { visual: FB_VISUAL_TRUECOLOR, ..Default::default() };
+        let fix = FixScreeninfo {
+            visual: FB_VISUAL_TRUECOLOR,
+            ..Default::default()
+        };
         assert!(valid_rgb_format(&v, &fix));
         let mut pixels = [0_u8; 4];
         encode_rgb24_row(&[0x12, 0x34, 0x56], &mut pixels, 4, &v).unwrap();
