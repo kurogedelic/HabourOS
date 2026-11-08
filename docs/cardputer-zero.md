@@ -97,7 +97,10 @@ bash run-cardputer-zero-sim.sh
 ```
 
 This runs the **same Rust UI** at the native 320×170 resolution in an SDL2
-window. The browser simulator also runs the same GUI compiled to WebAssembly.
+window and enables M5-style desktop navigation: F=Up, X=Down, Z=Left, C=Right.
+Inside the text editor these are regular letters; hold Fn with F/X/Z/C on
+the physical keyboard to request arrow keys while typing. The browser
+simulator also runs the same GUI compiled to WebAssembly.
 Both are useful for layout, fonts and keyboard tests. The M5Stack official
 SDL2 simulator itself is an **LVGL application**, not a general-purpose Linux
 emulator: HarbourOS is not loaded into that LVGL process. The dedicated
@@ -196,9 +199,14 @@ VFS data is saved under `$XDG_DATA_HOME/harbour-os/` (or
 ## Keyboard and UI checks
 
 The Cardputer Zero quick-start documents arrow navigation as
-**Fn + F / X / Z / C** and an **OK/ENTER** key. The evdev adapter reads the keycodes supplied by the kernel and translates
-them to SDL2 events. FN remapping is handled by the kernel keyboard driver;
-verify the resulting codes on real hardware.
+**Fn + F / X / Z / C** and an **OK/ENTER** key. The evdev adapter reads the kernel's TCA8418 keycodes directly. The M5
+APPLaunch firmware uses a non-PC mapping for many punctuation keys, so the
+native adapter includes that default symbol table, including codes 69–94.
+Fn+F/X/Z/C maps to arrows; plain F/X/Z/C navigate on the desktop but
+remain literal letters in text-editing screens. The actual Fn and key-repeat
+behavior still needs hardware testing. If the device uses a modified
+`/usr/share/keymaps/tca8418_keypad_m5stack_keymap.map`, the built-in mapping
+may need updating to match its contents.
 The OS already supports keyboard navigation; the physical Ctrl shortcuts
 (`Ctrl+S`, `Ctrl+B`, etc.) may need a dedicated Cardputer mapping.
 
