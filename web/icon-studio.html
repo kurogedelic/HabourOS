@@ -3,131 +3,123 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f5f4f0">
-<title>Harbour Icon Studio · 128</title>
+<meta name="theme-color" content="#FFE8B8">
+<title>Harbour Icons</title>
 <style>
-:root{color-scheme:light;--bg:#f5f4f0;--panel:#fff;--ink:#20211f;--muted:#646862;--line:#d5d7d2;--accent:#8a5a20;--soft:#f1ece2}
+:root{color-scheme:light;--ink:#382209;--mid:#b8945c;--desktop:#f0d6a0;--paper:#ffe8b8;--line:rgba(56,34,9,.30);--wash:rgba(56,34,9,.055);--active:rgba(56,34,9,.11)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif}
-button,input{font:inherit} button{cursor:pointer}
-button:focus-visible,input:focus-visible{outline:3px solid #4b83c3;outline-offset:2px}
-button:disabled{opacity:.45;cursor:default}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:15px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line);background:var(--panel)}
-h1{font-size:18px;letter-spacing:-.02em;margin:0;font-weight:700}h2{font-size:15px;margin:0;font-weight:650}
-.sub{color:var(--muted);font-size:12px} .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.button,.file-button{border:1px solid #aaaead;background:#fff;color:var(--ink);border-radius:7px;min-height:42px;padding:9px 12px;display:inline-flex;justify-content:center;align-items:center;gap:5px;white-space:nowrap}
-.button.primary{background:#292b29;color:white;border-color:#292b29}
-.button.active{background:var(--soft);border-color:var(--accent);color:#593810}
-.button:hover,.file-button:hover{background:#f5f4ef}.button.primary:hover{background:#414442}
-.layout{display:grid;grid-template-columns:minmax(255px,310px) minmax(0,1fr);gap:16px;max-width:1350px;margin:auto;padding:16px}
-.panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.library{display:flex;flex-direction:column;min-height:0;max-height:calc(100dvh - 112px)}
-.panel-top{padding:14px;border-bottom:1px solid var(--line)}
-.panel-top .headrow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-#search{width:100%;margin-top:10px;padding:10px 12px;min-height:43px;border:1px solid var(--line);border-radius:7px;background:#fff}
-.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;overflow:auto;padding:10px;align-content:start;-webkit-overflow-scrolling:touch}
-.tile{border:1px solid transparent;background:#f6f7f5;border-radius:7px;padding:9px 3px 7px;display:flex;align-items:center;flex-direction:column;gap:3px;min-width:0;min-height:91px;color:var(--ink)}
-.tile[aria-pressed="true"]{border:2px solid var(--accent);padding:8px 2px 6px;background:var(--soft)}
-.tile canvas{width:42px;height:42px;image-rendering:pixelated;image-rendering:crisp-edges;background-color:#f0f0ef;background-image:linear-gradient(45deg,#ddd 25%,transparent 25%),linear-gradient(-45deg,#ddd 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ddd 75%),linear-gradient(-45deg,transparent 75%,#ddd 75%);background-size:12px 12px;background-position:0 0,0 6px,6px -6px,-6px 0}
-.tile .number{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
-.tile .filename{font-size:11px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.editor{padding:16px}
-.editor-top{display:flex;gap:15px;justify-content:space-between;align-items:end;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:13px}
-.namegroup{flex:1;min-width:190px;max-width:420px}.namegroup label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
-#iconName{width:100%;border:1px solid var(--line);border-radius:7px;height:43px;padding:8px 11px;color:var(--ink)}
-.index-info{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
-.workspace{display:flex;flex-wrap:wrap;align-items:flex-start;gap:23px;padding-top:20px}
-.stage{width:min(100%,min(480px,70vh));flex:0 1 480px;min-width:240px}
-.artboard{position:relative;width:100%;aspect-ratio:1;overflow:hidden;border:1px solid #8d908c;border-radius:3px;background-color:#fff;background-image:linear-gradient(45deg,#e3e4e1 25%,transparent 25%),linear-gradient(-45deg,#e3e4e1 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e3e4e1 75%),linear-gradient(-45deg,transparent 75%,#e3e4e1 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0;touch-action:none}
-#canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none;cursor:crosshair}
-.artboard.grid-on::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(70,72,70,.16) 1px,transparent 1px),linear-gradient(to bottom,rgba(70,72,70,.16) 1px,transparent 1px);background-size:calc(100% / 24) calc(100% / 24);background-position:-1px -1px}
-.stage-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;font-size:12px;color:var(--muted)}
-.tools{flex:1;min-width:208px;max-width:310px}
-.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:9px 0 14px}
-.tool-grid button{min-height:48px}
-.tool-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
-.section{padding-bottom:13px;margin-bottom:14px;border-bottom:1px solid var(--line)}
-.palette{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
-.swatch{height:42px;width:42px;border-radius:7px;border:2px solid #bdbfba;position:relative;padding:0}
-.swatch.selected{outline:2px solid var(--accent);outline-offset:2px}
-.swatch[data-color="#ffffff"]{box-shadow:inset 0 0 0 1px #aaa}
-.colorline{display:flex;gap:11px;align-items:center;margin-top:12px}
-#customColor{width:58px;height:44px;padding:3px;border:1px solid var(--line);border-radius:7px;background:#fff}
-.checkbox-row{display:inline-flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}
-.checkbox-row input{width:20px;height:20px;accent-color:var(--accent)}
-.note{font-size:12px;color:var(--muted);line-height:1.65;max-width:700px}
-.lower{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
-.status{font-size:12px;color:var(--muted);min-height:20px}
+html,body{min-height:100%;margin:0}
+body{background:var(--desktop);color:var(--ink);font:14px/1.35 system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:disabled{opacity:.35;cursor:default}
+button:focus-visible,input:focus-visible,.file-button:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+svg{display:block;width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px max(18px,env(safe-area-inset-left));border-bottom:1px solid var(--line);background:var(--paper)}
+.brand{display:flex;align-items:baseline;gap:9px;letter-spacing:-.035em;white-space:nowrap}
+.brand strong{font-size:19px;font-weight:750}
+.brand span{font-size:14px;font-weight:450;opacity:.7}
+.header-actions{display:flex;gap:7px;align-items:center}
+.action,.file-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:44px;min-height:42px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:transparent;font-size:12px;font-weight:600;white-space:nowrap}
+.action:hover,.file-button:hover{background:var(--active)}
+.action svg,.file-button svg{width:15px;height:15px}
+.layout{display:grid;grid-template-columns:clamp(214px,23vw,288px) minmax(0,1fr);gap:13px;max-width:1290px;margin:auto;padding:14px}
+.panel{min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--paper);overflow:hidden}
+.library{display:flex;flex-direction:column;height:calc(100dvh - 96px);min-height:390px}
+.library-head{display:flex;justify-content:space-between;align-items:center;padding:14px 13px 8px}
+.library-head strong{font-weight:700;font-size:17px;letter-spacing:-.025em}
+.sub,.index-info{font-size:12px;opacity:.7;font-variant-numeric:tabular-nums}
+.search-wrap{padding:0 12px 10px}
+#search{width:100%;height:37px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.28);outline-offset:1px}
+#search::placeholder{color:var(--ink);opacity:.5}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;overflow:auto;padding:7px 9px 18px;align-content:start;-webkit-overflow-scrolling:touch}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:77px;padding:7px 2px;border:1px solid transparent;background:var(--wash);border-radius:6px;color:var(--ink)}
+.tile:hover{border-color:var(--mid)}
+.tile[aria-pressed="true"]{border:1px solid var(--ink);background:var(--active)}
+.tile canvas{width:40px;height:40px;image-rendering:pixelated;image-rendering:crisp-edges;background-color:var(--paper);background-image:linear-gradient(45deg,var(--desktop) 25%,transparent 25%),linear-gradient(-45deg,var(--desktop) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--desktop) 75%),linear-gradient(-45deg,transparent 75%,var(--desktop) 75%);background-size:10px 10px;background-position:0 0,0 5px,5px -5px,-5px 0}
+.tile .number{font-size:10px;opacity:.6;font-variant-numeric:tabular-nums}
+.tile .filename{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.editor{padding:18px}
+.editor-top{display:flex;align-items:center;gap:14px;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:13px}
+#iconName{width:100%;min-width:0;max-width:450px;height:40px;padding:6px 9px;border:1px solid transparent;background:transparent;border-radius:6px;font-size:18px;font-weight:600;letter-spacing:-.025em}
+#iconName:focus{background:var(--desktop);border-color:var(--line);outline:none}
+.namegroup{flex:1;min-width:0}.index-info{white-space:nowrap}
+.workspace{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;justify-content:center;padding:20px 2px 2px}
+.stage{flex:1 1 360px;max-width:min(520px,62vh);min-width:260px}
+.artboard{position:relative;width:100%;aspect-ratio:1;border:1px solid var(--mid);border-radius:3px;overflow:hidden;background-color:var(--paper);background-image:linear-gradient(45deg,var(--desktop) 25%,transparent 25%),linear-gradient(-45deg,var(--desktop) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--desktop) 75%),linear-gradient(-45deg,transparent 75%,var(--desktop) 75%);background-size:22px 22px;background-position:0 0,0 11px,11px -11px,-11px 0;touch-action:none}
+#canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;cursor:crosshair}
+.artboard.grid-on::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(56,34,9,.17) 1px,transparent 1px),linear-gradient(to bottom,rgba(56,34,9,.17) 1px,transparent 1px);background-size:calc(100% / 24) calc(100% / 24);background-position:-1px -1px}
+.stage-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;font-size:11px;opacity:.7}
+.checkbox-row{display:inline-flex;align-items:center;gap:7px;min-height:33px;cursor:pointer;font-size:12px}
+.checkbox-row input{width:17px;height:17px;accent-color:var(--ink)}
+.tools{width:186px;flex:0 0 186px;display:flex;flex-direction:column;gap:15px}
+.tool-grid,.tool-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.tool-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tool-grid .icon-button,.tool-row .icon-button{width:100%}
+.icon-button{display:inline-flex;justify-content:center;align-items:center;min-width:44px;min-height:47px;padding:7px;border:1px solid var(--line);border-radius:7px;background:transparent}
+.icon-button:hover{background:var(--active)}
+.icon-button.active{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.swatch{position:relative;width:100%;aspect-ratio:1;border:1px solid var(--line);border-radius:5px;padding:0;outline-offset:2px}
+.swatch.selected{outline:2px solid var(--ink);outline-offset:2px}
+.status{font-size:11px;opacity:.65;min-height:18px;text-align:center}
+.tool-divider{height:1px;background:var(--line)}
+.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 #fileInput,#pngInput{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-@media(max-width:860px){.layout{grid-template-columns:1fr}.library{max-height:245px}.tiles{grid-template-columns:repeat(6,minmax(0,1fr))}.tile{min-height:85px}.workspace{gap:18px}.stage{width:min(100%,480px)}}
-@media(max-width:570px){header{padding:13px 12px}.layout{padding:10px;gap:10px}.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}.editor{padding:12px}.stage{flex:1 1 100%;min-width:0}.tools{max-width:none;width:100%}.workspace{gap:14px}.header-actions{width:100%}.header-actions .button,.header-actions .file-button{flex:1;padding-left:7px;padding-right:7px;font-size:12px}}
+@media(max-width:1020px){.layout{grid-template-columns:210px minmax(0,1fr)}.workspace{gap:13px}.tools{width:100%;flex:1 1 100%;max-width:520px;flex-direction:row;align-items:center;justify-content:center;flex-wrap:wrap;gap:12px}.tool-grid{flex:1 1 190px;max-width:240px}.palette{width:170px}.tool-row{width:158px}.tool-divider{display:none}.status{display:none}.stage{flex:1 1 100%;min-width:0;max-width:min(540px,58vh)}}
+@media(max-width:720px){.topbar{padding:10px 11px}.brand strong{font-size:17px}.brand span{font-size:12px}.header-actions{gap:5px}.action,.file-button{min-width:40px;min-height:39px;padding:7px;font-size:11px}.layout{display:flex;flex-direction:column;gap:9px;padding:9px}.library{height:auto;min-height:0}.library-head{padding:9px 11px 5px}.library-head strong{font-size:14px}.search-wrap{padding:0 10px 7px}#search{height:32px}.tiles{display:flex;gap:5px;padding:3px 9px 9px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity}.tile{flex:0 0 66px;min-height:70px;scroll-snap-align:start}.tile canvas{width:35px;height:35px}.editor{padding:11px}.editor-top{padding-bottom:9px}.workspace{padding-top:12px;gap:13px}.stage{max-width:min(100%,min(500px,62dvh));flex:1 1 100%}.tools{justify-content:center}.tool-grid{flex:1 1 160px}.palette{width:142px}.tool-row{width:144px}}
 </style>
 </head>
+
 <body>
-<header>
-  <div><h1>Harbour Icon Studio</h1><div class="sub">128 slots · 24 × 24 pixels · Apple Pencil / touch</div></div>
+<header class="topbar">
+  <div class="brand"><strong>Harbour</strong><span>Icons</span></div>
   <div class="header-actions">
-    <button type="button" class="button primary" id="exportJson">Project JSON</button>
-    <button type="button" class="button" id="exportZip">PNG ZIP</button>
-    <label class="file-button" for="fileInput">Import JSON</label>
+    <button type="button" class="action" id="exportJson" title="Export project JSON" aria-label="Export JSON">JSON <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></button>
+    <button type="button" class="action" id="exportZip" title="Export 128 transparent PNGs" aria-label="Export PNG ZIP">PNG <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></button>
+    <label class="file-button" for="fileInput" title="Import JSON project" aria-label="Import JSON"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9m-4 4 4-4 4 4M4 7V4h16v3"/></svg><span class="visually-hidden">Import JSON</span></label>
     <input type="file" id="fileInput" accept=".json,application/json">
   </div>
 </header>
 <main class="layout">
-  <section class="panel library" aria-label="Icon library">
-    <div class="panel-top">
-      <div class="headrow"><h2>Icons</h2><span class="sub" id="progress">0 / 128 drawn</span></div>
-      <input type="search" id="search" placeholder="名前・番号で検索" aria-label="Search icons" autocomplete="off">
-    </div>
+  <section class="panel library" aria-label="128 icons">
+    <div class="library-head"><strong>128</strong><span class="sub" id="progress">0 / 128</span></div>
+    <div class="search-wrap"><input type="search" id="search" placeholder="Search" aria-label="Search icons" autocomplete="off"></div>
     <div class="tiles" id="tiles"></div>
   </section>
   <section class="panel editor" aria-label="Pixel editor">
     <div class="editor-top">
-      <div class="namegroup"><label for="iconName">Icon name (PNG filename)</label><input type="text" id="iconName" maxlength="60" autocomplete="off" spellcheck="false"></div>
-      <div class="index-info" id="indexInfo">001 / 128</div>
+      <div class="namegroup"><label class="visually-hidden" for="iconName">Icon name</label><input type="text" id="iconName" maxlength="60" autocomplete="off" spellcheck="false"></div>
+      <span class="index-info" id="indexInfo">001 / 128</span>
     </div>
     <div class="workspace">
       <div class="stage">
         <div class="artboard grid-on" id="artboard">
-          <canvas id="canvas" width="24" height="24" aria-label="24 by 24 pixel drawing canvas"></canvas>
+          <canvas id="canvas" width="24" height="24" aria-label="Draw icon in a 24 by 24 pixel canvas"></canvas>
         </div>
-        <div class="stage-foot"><span id="pixelInfo">24 × 24 · transparent background</span><label class="checkbox-row"><input id="gridCheck" type="checkbox" checked> Grid</label></div>
+        <div class="stage-foot"><span id="pixelInfo">24 × 24</span><label class="checkbox-row"><input id="gridCheck" type="checkbox" checked>Grid</label></div>
       </div>
       <div class="tools">
-        <div class="section">
-          <h2>Tools</h2>
-          <div class="tool-grid">
-            <button class="button active" id="pen" data-tool="pen" type="button">Pencil</button>
-            <button class="button" id="erase" data-tool="erase" type="button">Eraser</button>
-            <button class="button" id="fill" data-tool="fill" type="button">Fill</button>
-            <button class="button" id="pick" data-tool="pick" type="button">Pick color</button>
-          </div>
-          <div class="tool-row">
-            <button class="button" type="button" id="undo">Undo</button>
-            <button class="button" type="button" id="redo">Redo</button>
-            <button class="button" type="button" id="clearIcon">Clear</button>
-          </div>
+        <div class="tool-grid" role="toolbar" aria-label="Drawing tools">
+          <button type="button" class="icon-button active" id="pen" data-tool="pen" title="Pencil" aria-label="Pencil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 5-.8L20 8a2.8 2.8 0 0 0-4-4L5 15zM14 6l4 4"/></svg></button>
+          <button type="button" class="icon-button" id="erase" data-tool="erase" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 16 10-11a2 2 0 0 1 3 0l5 5a2 2 0 0 1 0 3l-7 7H8zM9 10l8 8M13 20h8"/></svg></button>
+          <button type="button" class="icon-button" id="fill" data-tool="fill" title="Fill" aria-label="Fill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 9-9 9-9-9zM9 3l6 6M3 21h18"/></svg></button>
+          <button type="button" class="icon-button" id="pick" data-tool="pick" title="Pick color" aria-label="Pick color"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5 5 5M4 20l5-1 11-11a2.5 2.5 0 0 0-4-4L5 15z"/></svg></button>
         </div>
-        <div class="section">
-          <h2>Color</h2>
-          <div class="palette" id="palette"></div>
-          <div class="colorline"><label for="customColor" class="sub">Custom color</label><input type="color" id="customColor" value="#ffffff"><span id="colorCode" class="sub">#FFFFFF</span></div>
+        <div class="tool-divider"></div>
+        <div class="palette" id="palette" role="group" aria-label="HarbourOS palette"></div>
+        <div class="visually-hidden"><label for="customColor">Legacy custom color</label><input type="color" id="customColor" value="#382209"><span id="colorCode">#382209</span></div>
+        <div class="tool-divider"></div>
+        <div class="tool-row" role="toolbar" aria-label="Edit">
+          <button type="button" class="icon-button" id="undo" title="Undo" aria-label="Undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14"/></svg></button>
+          <button type="button" class="icon-button" id="redo" title="Redo" aria-label="Redo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14"/></svg></button>
+          <button type="button" class="icon-button" id="clearIcon" title="Clear icon" aria-label="Clear icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v6m4-6v6"/></svg></button>
+          <button type="button" class="icon-button" id="copyNext" title="Duplicate to next slot" aria-label="Duplicate to next slot"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button>
+          <button type="button" class="icon-button" id="importPng" title="Import PNG" aria-label="Import PNG"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 6-5 4 3 3-2 4 4"/></svg></button>
         </div>
-        <div class="section">
-          <h2>Current icon</h2>
-          <div class="tool-row">
-            <button class="button" id="importPng" type="button">Import PNG</button>
-            <button class="button" id="copyNext" type="button">Copy to next slot</button>
-          </div>
-          <input type="file" id="pngInput" accept="image/png,image/*">
-        </div>
-        <div class="status" id="status" role="status">Local save enabled</div>
+        <input type="file" id="pngInput" accept="image/png,image/*">
+        <div class="status" id="status" role="status" aria-live="polite">Saved locally</div>
       </div>
-    </div>
-    <div class="lower note">
-      Apple Pencil・指・マウスで描画できます。変更はこのブラウザのWeb Storageに自動保存されます。
-      <strong>iPadのデータ消去やプライベートブラウズで消える場合があるため、定期的にProject JSONを保存してください。</strong>
-      JSONをこのチャットに送れば、128個のPNG生成やHarbourOSのアイコン差し替えに使用できます。
     </div>
   </section>
 </main>
@@ -136,13 +128,14 @@ h1{font-size:18px;letter-spacing:-.02em;margin:0;font-weight:700}h2{font-size:15
   "use strict";
   var W = 24, TOTAL = 128, STORE = "harbour-icon-studio:v1";
   var defaults = ["Calculator","Clock","Dictionary","File","Folder","Fune","Graph","Preferences","Snake","Terminal","TextEditor","Trash","Home","Settings","Network","Music"];
-  var palette = ["#ffffff","#202020","#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#5856d6"];
+  // Exact four-color Cardputer Zero theme: assets/themes/cardputer-zero.yaml
+  var palette = ["#382209","#b8945c","#f0d6a0","#ffe8b8"];
   var canvas = document.getElementById("canvas"), ctx = canvas.getContext("2d", {willReadFrequently:true});
   var artboard = document.getElementById("artboard"), tiles = document.getElementById("tiles");
   var colorInput = document.getElementById("customColor"), nameInput = document.getElementById("iconName");
   var status = document.getElementById("status"), progress = document.getElementById("progress");
   var iconInfo = document.getElementById("indexInfo"), pixelInfo = document.getElementById("pixelInfo");
-  var selected = 0, tool = "pen", color = "#ffffff", dragging = false, last = null;
+  var selected = 0, tool = "pen", color = "#382209", dragging = false, last = null;
   var saveTimer = null, dirty = false;
   var histories = Array.from({length:TOTAL},function(){return {undo:[],redo:[]};});
   function blank(i){return {id:i+1,name:defaults[i] || "Icon "+String(i+1).padStart(3,"0"),pixels:Array(W*W).fill(null)};}
@@ -176,9 +169,9 @@ h1{font-size:18px;letter-spacing:-.02em;margin:0;font-weight:700}h2{font-size:15
     }
     c.putImageData(data,0,0);
   }
-  function renderCanvas(){pixelsToCanvas(icons[selected].pixels,canvas);pixelInfo.textContent=W+" × "+W+" · "+icons[selected].pixels.filter(Boolean).length+" pixels filled";}
+  function renderCanvas(){pixelsToCanvas(icons[selected].pixels,canvas);pixelInfo.textContent=W+" × "+W+" · "+icons[selected].pixels.filter(Boolean).length+" px";}
   function renderThumb(i){var tile=tiles.querySelector('[data-index="'+i+'"]');if(tile){pixelsToCanvas(icons[i].pixels,tile.querySelector("canvas"));tile.querySelector(".filename").textContent=icons[i].name;tile.setAttribute("aria-label",String(i+1)+" "+icons[i].name);}}
-  function refreshProgress(){progress.textContent=icons.filter(function(x){return x.pixels.some(Boolean);}).length+" / "+TOTAL+" drawn";}
+  function refreshProgress(){progress.textContent=icons.filter(function(x){return x.pixels.some(Boolean);}).length+" / "+TOTAL;}
   function renderTiles(){
     tiles.textContent="";
     var fragment=document.createDocumentFragment();
