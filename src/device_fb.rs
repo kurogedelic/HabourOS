@@ -349,7 +349,11 @@ impl Keyboard {
                 _ => {}
             }
 
-            let direction = if self.fn_pressed { fn_arrow(code) } else { None };
+            let direction = if self.fn_pressed {
+                fn_arrow(code)
+            } else {
+                None
+            };
             let key = direction.or_else(|| map_key(code));
             let keymod = self.modifiers();
             let down = value != 0;
@@ -368,7 +372,8 @@ impl Keyboard {
                 // uses additional evdev keycodes (>68) for punctuation that
                 // have no SDL equivalent. Repeats should type repeatedly.
                 if !self.ctrl && !self.alt && direction.is_none() {
-                    if let Some(c) = cardputer_symbol(code).or_else(|| printable(code, self.shift)) {
+                    if let Some(c) = cardputer_symbol(code).or_else(|| printable(code, self.shift))
+                    {
                         events.push(Event::TextInput {
                             timestamp: 0,
                             window_id: 0,
