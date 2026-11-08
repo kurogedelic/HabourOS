@@ -40,7 +40,7 @@ jobs:
       - name: Collect site
         run: |
           mkdir -p _site
-          cp web/index.html web/3d.html web/main.js web/cardputer-zero.html web/cardputer-zero.js \
+          cp web/index.html web/3d.html web/main.js web/cardputer-zero.html web/cardputer-zero.js web/icon-studio.html \
             web/harbour_shell.js web/harbour_shell.wasm web/harbour_shell.data _site/
 
       - name: Configure Pages
