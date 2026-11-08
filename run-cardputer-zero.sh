@@ -19,16 +19,11 @@ if [[ ! -x "$BIN" ]]; then
   exit 1
 fi
 
-# Default to the stock device's Linux framebuffer when no Wayland
-# compositor is available. SDL2 still draws the entire HarbourOS UI; its
-# software canvas is copied to fbdev by the optional Rust device adapter.
-if [[ -z "${SDL_VIDEODRIVER:-}" ]]; then
-  if [[ -n "${WAYLAND_DISPLAY:-}" && -z "${HARBOUR_FBDEV:-}" ]]; then
-    export SDL_VIDEODRIVER=wayland
-  else
-    export SDL_VIDEODRIVER=dummy
-  fi
-fi
+# The Cardputer Zero display is framebuffer-native, not Wayland-native.
+# SDL2 renders to an in-memory software canvas; HarbourOS writes that canvas
+# to the kernel fbdev driver. Set SDL_VIDEODRIVER=wayland explicitly only when
+# testing an external compositor. This never installs or replaces a service.
+export SDL_VIDEODRIVER="${SDL_VIDEODRIVER:-dummy}"
 if [[ "$SDL_VIDEODRIVER" == "dummy" ]]; then
   export HARBOUR_FBDEV="${HARBOUR_FBDEV:-/dev/fb0}"
   export HARBOUR_INPUT_DEVICE="${HARBOUR_INPUT_DEVICE:-/dev/input/by-path/platform-3f804000.i2c-event}"
