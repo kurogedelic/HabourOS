@@ -88,6 +88,25 @@ available **only after the PR is merged to main and Pages redeploys**.
 
 The existing `web/index.html` 3D simulator is unchanged.
 
+## Local SDL2 simulator (without real hardware)
+
+For HarbourOS development on a macOS or Linux desktop, use:
+
+```sh
+bash run-cardputer-zero-sim.sh
+```
+
+This runs the **same Rust UI** at the native 320×170 resolution in an SDL2
+window. The browser simulator also runs the same GUI compiled to WebAssembly.
+Both are useful for layout, fonts and keyboard tests. The M5Stack official
+SDL2 simulator itself is an **LVGL application**, not a general-purpose Linux
+emulator: HarbourOS is not loaded into that LVGL process. The dedicated
+HarbourOS simulator therefore avoids a second GUI or LVGL dependency.
+
+The CI smoke test starts the SDL2 dummy-video software renderer for two
+frames at 320×170 and exercises the real drawing loop. It is a rendering
+startup test, **not** a framebuffer device or keyboard hardware test.
+
 ## Get an ARM64 binary
 
 On this repo's GitHub Actions page, run **Cardputer Zero ARM64
@@ -118,12 +137,14 @@ pixels into the framebuffer's reported RGB bitfields. It uses the framebuffer
 driver's actual stride and visible offsets. No LVGL rewrite, root filesystem
 replacement, or separate GUI is involved.
 
-The default launch script automatically chooses:
+The default launch script **always chooses the Linux framebuffer**:
+`SDL_VIDEODRIVER=dummy` + `HARBOUR_FBDEV=/dev/fb0`. This uses SDL2's
+software renderer as an off-screen 320×170 drawing buffer and writes pixels
+directly to fbdev, without a Wayland compositor. The kernel input device
+supplies keyboard events through evdev.
 
-- `SDL_VIDEODRIVER=dummy`, `HARBOUR_FBDEV=/dev/fb0`: when no
-  `WAYLAND_DISPLAY` is present. Uses our framebuffer/evdev adapter.
-- `SDL_VIDEODRIVER=wayland`: only when a Wayland session is advertised.
-  The SDL2 Wayland path remains available for other Linux hosts.
+Wayland remains an **explicit opt-in** for other Linux hosts:
+`SDL_VIDEODRIVER=wayland`, with `HARBOUR_FBDEV` unset.
 
 From a **safe application session** where APPLaunch has released the display:
 
