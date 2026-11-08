@@ -84,8 +84,12 @@ fn main() -> Result<(), String> {
     // pixels to /dev/fb0. No compositor or separate LVGL UI is required.
     let fbdev_requested =
         cfg!(target_os = "linux") && std::env::var("HARBOUR_FBDEV").is_ok_and(|p| !p.is_empty());
+    // A headless SDL dummy window uses the same software renderer as fbdev.
+    // This lets CI exercise the exact renderer without opening /dev/fb0.
+    let software_renderer =
+        fbdev_requested || std::env::var("SDL_VIDEODRIVER").as_deref() == Ok("dummy");
     let builder = window.into_canvas();
-    let mut canvas = if fbdev_requested {
+    let mut canvas = if software_renderer {
         builder.software().build()
     } else {
         builder.present_vsync().build()
