@@ -86,8 +86,8 @@ fn main() -> Result<(), String> {
         cfg!(target_os = "linux") && std::env::var("HARBOUR_FBDEV").is_ok_and(|p| !p.is_empty());
     // M5's launcher uses F/X/Z/C as cursor substitutes on its home screen.
     // Limit this to our desktop; the editor must keep these as literal text.
-    let cardputer_navigation = fbdev_requested
-        || std::env::var("HARBOUR_CARDPUTER_KEYS").as_deref() == Ok("1");
+    let cardputer_navigation =
+        fbdev_requested || std::env::var("HARBOUR_CARDPUTER_KEYS").as_deref() == Ok("1");
     // A headless SDL dummy window uses the same software renderer as fbdev.
     // This lets CI exercise the exact renderer without opening /dev/fb0.
     let software_renderer =
@@ -117,13 +117,7 @@ fn main() -> Result<(), String> {
     let mut physical_keyboard = if framebuffer.is_some() {
         let path = std::env::var("HARBOUR_INPUT_DEVICE")
             .unwrap_or_else(|_| "/dev/input/by-path/platform-3f804000.i2c-event".to_string());
-        match device_fb::Keyboard::open(&path) {
-            Ok(keyboard) => Some(keyboard),
-            Err(err) => {
-                eprintln!("[cardputer] {err}; keyboard unavailable");
-                None
-            }
-        }
+        Some(device_fb::Keyboard::open(&path)?)
     } else {
         None
     };
@@ -327,7 +321,7 @@ fn main() -> Result<(), String> {
                         continue;
                     }
                     let Some(key) = keycode else { continue };
-                    let key = if cardputer_navigation && matches!(mode, Mode::Desktop) {
+                    let key = if cardputer_navigation && matches!(mode, Mode::Desktop | Mode::Snake) {
                         match key {
                             Keycode::F => Keycode::Up,
                             Keycode::X => Keycode::Down,
