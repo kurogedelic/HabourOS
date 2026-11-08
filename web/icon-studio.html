@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f4f0">
+<title>Harbour Icon Studio · 128</title>
+<style>
+:root{color-scheme:light;--bg:#f5f4f0;--panel:#fff;--ink:#20211f;--muted:#646862;--line:#d5d7d2;--accent:#8a5a20;--soft:#f1ece2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif}
+button,input{font:inherit} button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid #4b83c3;outline-offset:2px}
+button:disabled{opacity:.45;cursor:default}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:15px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line);background:var(--panel)}
+h1{font-size:18px;letter-spacing:-.02em;margin:0;font-weight:700}h2{font-size:15px;margin:0;font-weight:650}
+.sub{color:var(--muted);font-size:12px} .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.button,.file-button{border:1px solid #aaaead;background:#fff;color:var(--ink);border-radius:7px;min-height:42px;padding:9px 12px;display:inline-flex;justify-content:center;align-items:center;gap:5px;white-space:nowrap}
+.button.primary{background:#292b29;color:white;border-color:#292b29}
+.button.active{background:var(--soft);border-color:var(--accent);color:#593810}
+.button:hover,.file-button:hover{background:#f5f4ef}.button.primary:hover{background:#414442}
+.layout{display:grid;grid-template-columns:minmax(255px,310px) minmax(0,1fr);gap:16px;max-width:1350px;margin:auto;padding:16px}
+.panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.library{display:flex;flex-direction:column;min-height:0;max-height:calc(100dvh - 112px)}
+.panel-top{padding:14px;border-bottom:1px solid var(--line)}
+.panel-top .headrow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+#search{width:100%;margin-top:10px;padding:10px 12px;min-height:43px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;overflow:auto;padding:10px;align-content:start;-webkit-overflow-scrolling:touch}
+.tile{border:1px solid transparent;background:#f6f7f5;border-radius:7px;padding:9px 3px 7px;display:flex;align-items:center;flex-direction:column;gap:3px;min-width:0;min-height:91px;color:var(--ink)}
+.tile[aria-pressed="true"]{border:2px solid var(--accent);padding:8px 2px 6px;background:var(--soft)}
+.tile canvas{width:42px;height:42px;image-rendering:pixelated;image-rendering:crisp-edges;background-color:#f0f0ef;background-image:linear-gradient(45deg,#ddd 25%,transparent 25%),linear-gradient(-45deg,#ddd 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ddd 75%),linear-gradient(-45deg,transparent 75%,#ddd 75%);background-size:12px 12px;background-position:0 0,0 6px,6px -6px,-6px 0}
+.tile .number{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tile .filename{font-size:11px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.editor{padding:16px}
+.editor-top{display:flex;gap:15px;justify-content:space-between;align-items:end;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:13px}
+.namegroup{flex:1;min-width:190px;max-width:420px}.namegroup label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+#iconName{width:100%;border:1px solid var(--line);border-radius:7px;height:43px;padding:8px 11px;color:var(--ink)}
+.index-info{font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+.workspace{display:flex;flex-wrap:wrap;align-items:flex-start;gap:23px;padding-top:20px}
+.stage{width:min(100%,min(480px,70vh));flex:0 1 480px;min-width:240px}
+.artboard{position:relative;width:100%;aspect-ratio:1;overflow:hidden;border:1px solid #8d908c;border-radius:3px;background-color:#fff;background-image:linear-gradient(45deg,#e3e4e1 25%,transparent 25%),linear-gradient(-45deg,#e3e4e1 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e3e4e1 75%),linear-gradient(-45deg,transparent 75%,#e3e4e1 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0;touch-action:none}
+#canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none;cursor:crosshair}
+.artboard.grid-on::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(70,72,70,.16) 1px,transparent 1px),linear-gradient(to bottom,rgba(70,72,70,.16) 1px,transparent 1px);background-size:calc(100% / 24) calc(100% / 24);background-position:-1px -1px}
+.stage-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:10px;font-size:12px;color:var(--muted)}
+.tools{flex:1;min-width:208px;max-width:310px}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:9px 0 14px}
+.tool-grid button{min-height:48px}
+.tool-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.section{padding-bottom:13px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.palette{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.swatch{height:42px;width:42px;border-radius:7px;border:2px solid #bdbfba;position:relative;padding:0}
+.swatch.selected{outline:2px solid var(--accent);outline-offset:2px}
+.swatch[data-color="#ffffff"]{box-shadow:inset 0 0 0 1px #aaa}
+.colorline{display:flex;gap:11px;align-items:center;margin-top:12px}
+#customColor{width:58px;height:44px;padding:3px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.checkbox-row{display:inline-flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}
+.checkbox-row input{width:20px;height:20px;accent-color:var(--accent)}
+.note{font-size:12px;color:var(--muted);line-height:1.65;max-width:700px}
+.lower{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.status{font-size:12px;color:var(--muted);min-height:20px}
+#fileInput,#pngInput{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+@media(max-width:860px){.layout{grid-template-columns:1fr}.library{max-height:245px}.tiles{grid-template-columns:repeat(6,minmax(0,1fr))}.tile{min-height:85px}.workspace{gap:18px}.stage{width:min(100%,480px)}}
+@media(max-width:570px){header{padding:13px 12px}.layout{padding:10px;gap:10px}.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}.editor{padding:12px}.stage{flex:1 1 100%;min-width:0}.tools{max-width:none;width:100%}.workspace{gap:14px}.header-actions{width:100%}.header-actions .button,.header-actions .file-button{flex:1;padding-left:7px;padding-right:7px;font-size:12px}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Harbour Icon Studio</h1><div class="sub">128 slots · 24 × 24 pixels · Apple Pencil / touch</div></div>
+  <div class="header-actions">
+    <button type="button" class="button primary" id="exportJson">Project JSON</button>
+    <button type="button" class="button" id="exportZip">PNG ZIP</button>
+    <label class="file-button" for="fileInput">Import JSON</label>
+    <input type="file" id="fileInput" accept=".json,application/json">
+  </div>
+</header>
+<main class="layout">
+  <section class="panel library" aria-label="Icon library">
+    <div class="panel-top">
+      <div class="headrow"><h2>Icons</h2><span class="sub" id="progress">0 / 128 drawn</span></div>
+      <input type="search" id="search" placeholder="名前・番号で検索" aria-label="Search icons" autocomplete="off">
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+  <section class="panel editor" aria-label="Pixel editor">
+    <div class="editor-top">
+      <div class="namegroup"><label for="iconName">Icon name (PNG filename)</label><input type="text" id="iconName" maxlength="60" autocomplete="off" spellcheck="false"></div>
+      <div class="index-info" id="indexInfo">001 / 128</div>
+    </div>
+    <div class="workspace">
+      <div class="stage">
+        <div class="artboard grid-on" id="artboard">
+          <canvas id="canvas" width="24" height="24" aria-label="24 by 24 pixel drawing canvas"></canvas>
+        </div>
+        <div class="stage-foot"><span id="pixelInfo">24 × 24 · transparent background</span><label class="checkbox-row"><input id="gridCheck" type="checkbox" checked> Grid</label></div>
+      </div>
+      <div class="tools">
+        <div class="section">
+          <h2>Tools</h2>
+          <div class="tool-grid">
+            <button class="button active" id="pen" data-tool="pen" type="button">Pencil</button>
+            <button class="button" id="erase" data-tool="erase" type="button">Eraser</button>
+            <button class="button" id="fill" data-tool="fill" type="button">Fill</button>
+            <button class="button" id="pick" data-tool="pick" type="button">Pick color</button>
+          </div>
+          <div class="tool-row">
+            <button class="button" type="button" id="undo">Undo</button>
+            <button class="button" type="button" id="redo">Redo</button>
+            <button class="button" type="button" id="clearIcon">Clear</button>
+          </div>
+        </div>
+        <div class="section">
+          <h2>Color</h2>
+          <div class="palette" id="palette"></div>
+          <div class="colorline"><label for="customColor" class="sub">Custom color</label><input type="color" id="customColor" value="#ffffff"><span id="colorCode" class="sub">#FFFFFF</span></div>
+        </div>
+        <div class="section">
+          <h2>Current icon</h2>
+          <div class="tool-row">
+            <button class="button" id="importPng" type="button">Import PNG</button>
+            <button class="button" id="copyNext" type="button">Copy to next slot</button>
+          </div>
+          <input type="file" id="pngInput" accept="image/png,image/*">
+        </div>
+        <div class="status" id="status" role="status">Local save enabled</div>
+      </div>
+    </div>
+    <div class="lower note">
+      Apple Pencil・指・マウスで描画できます。変更はこのブラウザのWeb Storageに自動保存されます。
+      <strong>iPadのデータ消去やプライベートブラウズで消える場合があるため、定期的にProject JSONを保存してください。</strong>
+      JSONをこのチャットに送れば、128個のPNG生成やHarbourOSのアイコン差し替えに使用できます。
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  var W = 24, TOTAL = 128, STORE = "harbour-icon-studio:v1";
+  var defaults = ["Calculator","Clock","Dictionary","File","Folder","Fune","Graph","Preferences","Snake","Terminal","TextEditor","Trash","Home","Settings","Network","Music"];
+  var palette = ["#ffffff","#202020","#ff3b30","#ff9500","#ffcc00","#34c759","#007aff","#5856d6"];
+  var canvas = document.getElementById("canvas"), ctx = canvas.getContext("2d", {willReadFrequently:true});
+  var artboard = document.getElementById("artboard"), tiles = document.getElementById("tiles");
+  var colorInput = document.getElementById("customColor"), nameInput = document.getElementById("iconName");
+  var status = document.getElementById("status"), progress = document.getElementById("progress");
+  var iconInfo = document.getElementById("indexInfo"), pixelInfo = document.getElementById("pixelInfo");
+  var selected = 0, tool = "pen", color = "#ffffff", dragging = false, last = null;
+  var saveTimer = null, dirty = false;
+  var histories = Array.from({length:TOTAL},function(){return {undo:[],redo:[]};});
+  function blank(i){return {id:i+1,name:defaults[i] || "Icon "+String(i+1).padStart(3,"0"),pixels:Array(W*W).fill(null)};}
+  var icons = Array.from({length:TOTAL},function(_,i){return blank(i);});
+  function byId(id){return document.getElementById(id);}
+  function normalize(data){
+    if(!data || data.format!=="harbour-icon-studio" || data.version!==1 || data.size!==W || !Array.isArray(data.icons) || data.icons.length!==TOTAL) throw Error("24×24・128枠のHarbour Icon Studio JSONではありません");
+    return data.icons.map(function(item,i){
+      if(!item || !Array.isArray(item.pixels) || item.pixels.length!==W*W) throw Error("Icon "+(i+1)+" のピクセル数が不正です");
+      return {id:i+1,name:String(item.name || blank(i).name).slice(0,60),pixels:item.pixels.map(function(p){return typeof p==="string" && /^#[a-fA-F0-9]{6}$/.test(p)?p.toLowerCase():null;})};
+    });
+  }
+  function load(){
+    try{
+      var raw=localStorage.getItem(STORE);
+      if(raw){icons=normalize(JSON.parse(raw));status.textContent="Saved icons restored from this browser";}
+    }catch(e){status.textContent="保存データを読めませんでした。JSONから復元できます。";}
+  }
+  function project(){return {format:"harbour-icon-studio",version:1,size:W,iconCount:TOTAL,icons:icons};}
+  function saveNow(){
+    if(saveTimer){clearTimeout(saveTimer);saveTimer=null;}
+    try{localStorage.setItem(STORE,JSON.stringify(project()));dirty=false;status.textContent="Saved on this device";}
+    catch(e){status.textContent="Web Storageに保存できません。Project JSONを書き出してください。";}
+  }
+  function queueSave(){dirty=true;status.textContent="Saving…";if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,350);}
+  function pixelsToCanvas(pixels,target){
+    var c=target.getContext("2d"), data=c.createImageData(W,W), p=data.data;
+    for(var i=0;i<W*W;i++){
+      var hex=pixels[i];if(!hex)continue;
+      var n=i*4;p[n]=parseInt(hex.slice(1,3),16);p[n+1]=parseInt(hex.slice(3,5),16);p[n+2]=parseInt(hex.slice(5,7),16);p[n+3]=255;
+    }
+    c.putImageData(data,0,0);
+  }
+  function renderCanvas(){pixelsToCanvas(icons[selected].pixels,canvas);pixelInfo.textContent=W+" × "+W+" · "+icons[selected].pixels.filter(Boolean).length+" pixels filled";}
+  function renderThumb(i){var tile=tiles.querySelector('[data-index="'+i+'"]');if(tile){pixelsToCanvas(icons[i].pixels,tile.querySelector("canvas"));tile.querySelector(".filename").textContent=icons[i].name;tile.setAttribute("aria-label",String(i+1)+" "+icons[i].name);}}
+  function refreshProgress(){progress.textContent=icons.filter(function(x){return x.pixels.some(Boolean);}).length+" / "+TOTAL+" drawn";}
+  function renderTiles(){
+    tiles.textContent="";
+    var fragment=document.createDocumentFragment();
+    icons.forEach(function(icon,i){
+      var button=document.createElement("button");button.type="button";button.className="tile";button.dataset.index=String(i);button.setAttribute("aria-pressed",String(i===selected));
+      var cv=document.createElement("canvas");cv.width=cv.height=W;
+      var num=document.createElement("span");num.className="number";num.textContent=String(i+1).padStart(3,"0");
+      var name=document.createElement("span");name.className="filename";name.textContent=icon.name;
+      button.append(cv,num,name);button.addEventListener("click",function(){selectIcon(i);});
+      fragment.append(button);
+    });
+    tiles.append(fragment);
+    for(var i=0;i<TOTAL;i++)renderThumb(i);
+    filterTiles();
+  }
+  function filterTiles(){
+    var term=byId("search").value.trim().toLowerCase();
+    tiles.querySelectorAll(".tile").forEach(function(el){
+      var i=Number(el.dataset.index), match=!term || icons[i].name.toLowerCase().includes(term) || String(i+1).padStart(3,"0").includes(term);
+      el.hidden=!match;el.style.display=match?"":"none";
+    });
+  }
+  function selectIcon(i){
+    if(dragging)stopStroke();
+    selected=i;
+    tiles.querySelectorAll(".tile").forEach(function(el){el.setAttribute("aria-pressed",String(Number(el.dataset.index)===i));});
+    nameInput.value=icons[i].name;iconInfo.textContent=String(i+1).padStart(3,"0")+" / "+TOTAL;
+    renderCanvas();refreshHistoryControls();
+  }
+  function pushUndo(){
+    var h=histories[selected];h.undo.push(icons[selected].pixels.slice());if(h.undo.length>40)h.undo.shift();h.redo=[];
+    refreshHistoryControls();
+  }
+  function refreshHistoryControls(){byId("undo").disabled=!histories[selected].undo.length;byId("redo").disabled=!histories[selected].redo.length;}
+  function changePixels(){
+    renderCanvas();renderThumb(selected);refreshProgress();queueSave();
+  }
+  function setPixel(x,y,value){
+    var i=y*W+x;
+    if(icons[selected].pixels[i]===value)return false;
+    icons[selected].pixels[i]=value;return true;
+  }
+  function fillAt(x,y){
+    var a=icons[selected].pixels, from=a[y*W+x], to=color;if(from===to)return;
+    var stack=[y*W+x];a[y*W+x]=to;
+    while(stack.length){
+      var idx=stack.pop(),px=idx%W,py=(idx/W)|0;
+      var neigh=[];
+      if(px>0)neigh.push(idx-1);if(px<W-1)neigh.push(idx+1);
+      if(py>0)neigh.push(idx-W);if(py<W-1)neigh.push(idx+W);
+      neigh.forEach(function(k){if(a[k]===from){a[k]=to;stack.push(k);}});
+    }
+    changePixels();
+  }
+  function coords(e){
+    var rect=canvas.getBoundingClientRect();
+    return {x:Math.max(0,Math.min(W-1,Math.floor((e.clientX-rect.left)*W/rect.width))),y:Math.max(0,Math.min(W-1,Math.floor((e.clientY-rect.top)*W/rect.height)))};
+  }
+  function line(a,b,val){
+    var x=a.x,y=a.y,dx=Math.abs(b.x-x),dy=Math.abs(b.y-y),sx=x<b.x?1:-1,sy=y<b.y?1:-1,err=dx-dy,changed=false;
+    while(true){changed=setPixel(x,y,val)||changed;if(x===b.x&&y===b.y)break;var e2=err*2;if(e2>-dy){err-=dy;x+=sx;}if(e2<dx){err+=dx;y+=sy;}}
+    if(changed)changePixels();
+  }
+  function stopStroke(){dragging=false;last=null;}
+  canvas.addEventListener("pointerdown",function(e){
+    if(e.pointerType==="mouse" && e.button!==0)return;
+    e.preventDefault();canvas.setPointerCapture(e.pointerId);
+    var pos=coords(e),old=icons[selected].pixels[pos.y*W+pos.x];
+    if(tool==="pick"){
+      if(old){setColor(old);setTool("pen");}
+      return;
+    }
+    if(tool==="fill"){if(old!==color){pushUndo();fillAt(pos.x,pos.y);}return;}
+    pushUndo();dragging=true;last=pos;line(pos,pos,tool==="erase"?null:color);
+  });
+  canvas.addEventListener("pointermove",function(e){if(!dragging)return;e.preventDefault();var pos=coords(e);line(last,pos,tool==="erase"?null:color);last=pos;});
+  canvas.addEventListener("pointerup",stopStroke);canvas.addEventListener("pointercancel",stopStroke);window.addEventListener("blur",stopStroke);
+  function setTool(t){tool=t;document.querySelectorAll("[data-tool]").forEach(function(b){b.classList.toggle("active",b.dataset.tool===t);b.setAttribute("aria-pressed",String(b.dataset.tool===t));});}
+  document.querySelectorAll("[data-tool]").forEach(function(b){b.addEventListener("click",function(){setTool(b.dataset.tool);});});
+  function setColor(c){
+    color=c.toLowerCase();colorInput.value=color;byId("colorCode").textContent=color.toUpperCase();
+    document.querySelectorAll(".swatch").forEach(function(b){b.classList.toggle("selected",b.dataset.color===color);});
+  }
+  palette.forEach(function(c){
+    var b=document.createElement("button");b.type="button";b.className="swatch";b.dataset.color=c;b.style.backgroundColor=c;b.setAttribute("aria-label","Color "+c);
+    b.addEventListener("click",function(){setColor(c);setTool("pen");});byId("palette").append(b);
+  });
+  colorInput.addEventListener("input",function(){setColor(colorInput.value);setTool("pen");});
+  byId("undo").addEventListener("click",function(){
+    var h=histories[selected];if(!h.undo.length)return;h.redo.push(icons[selected].pixels.slice());icons[selected].pixels=h.undo.pop();changePixels();refreshHistoryControls();
+  });
+  byId("redo").addEventListener("click",function(){
+    var h=histories[selected];if(!h.redo.length)return;h.undo.push(icons[selected].pixels.slice());icons[selected].pixels=h.redo.pop();changePixels();refreshHistoryControls();
+  });
+  byId("clearIcon").addEventListener("click",function(){
+    if(!icons[selected].pixels.some(Boolean) || !confirm("このアイコンの描画を消去しますか？"))return;
+    pushUndo();icons[selected].pixels=Array(W*W).fill(null);changePixels();
+  });
+  byId("copyNext").addEventListener("click",function(){
+    var next=(selected+1)%TOTAL;
+    if(icons[next].pixels.some(Boolean) && !confirm("次のスロットの描画を上書きしますか？"))return;
+    histories[next].undo.push(icons[next].pixels.slice());histories[next].redo=[];
+    icons[next].pixels=icons[selected].pixels.slice();
+    renderThumb(next);refreshProgress();queueSave();selectIcon(next);
+  });
+  byId("gridCheck").addEventListener("change",function(e){artboard.classList.toggle("grid-on",e.target.checked);});
+  byId("search").addEventListener("input",filterTiles);
+  nameInput.addEventListener("input",function(){icons[selected].name=nameInput.value.slice(0,60);renderThumb(selected);filterTiles();queueSave();});
+  document.addEventListener("keydown",function(e){
+    var edit=document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if(edit)return;
+    if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==="z"){
+      e.preventDefault();byId(e.shiftKey?"redo":"undo").click();
+    }
+  });
+  function download(blob,filename){
+    var url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;
+    document.body.append(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},15000);
+  }
+  function jsonText(){return JSON.stringify(project(),null,2);}
+  byId("exportJson").addEventListener("click",function(){saveNow();download(new Blob([jsonText()],{type:"application/json;charset=utf-8"}),"harbour-icons-128.json");});
+  byId("fileInput").addEventListener("change",async function(e){
+    var file=e.target.files[0];if(!file)return;
+    try{
+      var incoming=normalize(JSON.parse(await file.text()));
+      if(!confirm("現在の128アイコンを読み込んだJSONで置き換えますか？"))return;
+      icons=incoming;histories=Array.from({length:TOTAL},function(){return {undo:[],redo:[]};});
+      selected=0;renderTiles();selectIcon(0);refreshProgress();saveNow();status.textContent="Project JSON imported and saved";
+    }catch(error){alert("読み込み失敗: "+error.message);}
+    finally{e.target.value="";}
+  });
+  byId("importPng").addEventListener("click",function(){byId("pngInput").click();});
+  byId("pngInput").addEventListener("change",async function(e){
+    var file=e.target.files[0];if(!file)return;
+    try{
+      var bitmap=await createImageBitmap(file),tmp=document.createElement("canvas");
+      tmp.width=tmp.height=W;var c=tmp.getContext("2d",{willReadFrequently:true});
+      c.clearRect(0,0,W,W);c.imageSmoothingEnabled=false;c.drawImage(bitmap,0,0,W,W);bitmap.close();
+      var raw=c.getImageData(0,0,W,W).data, p=[];
+      for(var i=0;i<W*W;i++){var k=i*4;p.push(raw[k+3]>=128?"#"+[raw[k],raw[k+1],raw[k+2]].map(function(n){return n.toString(16).padStart(2,"0");}).join(""):null);}
+      pushUndo();icons[selected].pixels=p;changePixels();
+    }catch(error){alert("PNGを読み込めませんでした: "+error.message);}
+    finally{e.target.value="";}
+  });
+  // ZIP format (stored entries, no external libraries or network dependency).
+  var crcTable=Array.from({length:256},function(_,n){for(var j=0;j<8;j++)n=(n&1)?(0xedb88320^(n>>>1)):(n>>>1);return n>>>0;});
+  function crc32(bytes){var c=0xffffffff;for(var i=0;i<bytes.length;i++)c=crcTable[(c^bytes[i])&255]^(c>>>8);return (c^0xffffffff)>>>0;}
+  function header(length){return new DataView(new ArrayBuffer(length));}
+  function put16(v,i,n){v.setUint16(i,n,true);}
+  function put32(v,i,n){v.setUint32(i,n>>>0,true);}
+  function bytes(v){return new Uint8Array(v.buffer);}
+  function makeZip(files){
+    var output=[],central=[],offset=0,encoder=new TextEncoder();
+    files.forEach(function(item){
+      var name=encoder.encode(item.name),data=item.data,crc=crc32(data);
+      var local=header(30);
+      put32(local,0,0x04034b50);put16(local,4,20);put16(local,6,0x0800);put16(local,8,0);
+      put32(local,14,crc);put32(local,18,data.length);put32(local,22,data.length);put16(local,26,name.length);
+      output.push(bytes(local),name,data);
+      var dir=header(46);
+      put32(dir,0,0x02014b50);put16(dir,4,20);put16(dir,6,20);put16(dir,8,0x0800);
+      put32(dir,16,crc);put32(dir,20,data.length);put32(dir,24,data.length);
+      put16(dir,28,name.length);put32(dir,42,offset);
+      central.push(bytes(dir),name);
+      offset+=30+name.length+data.length;
+    });
+    var centralLength=central.reduce(function(n,a){return n+a.length;},0),end=header(22);
+    put32(end,0,0x06054b50);put16(end,8,files.length);put16(end,10,files.length);put32(end,12,centralLength);put32(end,16,offset);
+    return new Blob(output.concat(central,[bytes(end)]),{type:"application/zip"});
+  }
+  function safeName(s){return (s.trim().replace(/[^a-zA-Z0-9_-]+/g,"-").replace(/^-|-$/g,"").slice(0,45)||"icon").toLowerCase();}
+  function pngBytes(pixels){
+    return new Promise(function(resolve,reject){
+      var cv=document.createElement("canvas");cv.width=cv.height=W;pixelsToCanvas(pixels,cv);
+      cv.toBlob(function(blob){if(!blob){reject(Error("PNG encoding failed"));return;}blob.arrayBuffer().then(function(buffer){resolve(new Uint8Array(buffer));},reject);},"image/png");
+    });
+  }
+  byId("exportZip").addEventListener("click",async function(){
+    var button=this;button.disabled=true;saveNow();
+    try{
+      var files=[{name:"harbour-icons-128.json",data:new TextEncoder().encode(jsonText())}];
+      for(var i=0;i<TOTAL;i++){
+        status.textContent="Creating PNG ZIP "+(i+1)+"/"+TOTAL+"…";
+        files.push({name:"icons/"+String(i+1).padStart(3,"0")+"-"+safeName(icons[i].name)+".png",data:await pngBytes(icons[i].pixels)});
+      }
+      download(makeZip(files),"harbour-icons-128.zip");status.textContent="PNG ZIP exported";
+    }catch(error){alert("ZIP書き出しに失敗しました: "+error.message);}
+    finally{button.disabled=false;}
+  });
+  load();renderTiles();selectIcon(0);setColor(color);setTool(tool);refreshProgress();
+  window.addEventListener("pagehide",function(){if(dirty)saveNow();});
+  document.addEventListener("visibilitychange",function(){if(document.hidden && dirty)saveNow();});
+})();
+</script>
+</body>
+</html>
