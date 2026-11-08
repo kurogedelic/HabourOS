@@ -84,6 +84,10 @@ fn main() -> Result<(), String> {
     // pixels to /dev/fb0. No compositor or separate LVGL UI is required.
     let fbdev_requested =
         cfg!(target_os = "linux") && std::env::var("HARBOUR_FBDEV").is_ok_and(|p| !p.is_empty());
+    // M5's launcher uses F/X/Z/C as cursor substitutes on its home screen.
+    // Limit this to our desktop; the editor must keep these as literal text.
+    let cardputer_navigation = fbdev_requested
+        || std::env::var("HARBOUR_CARDPUTER_KEYS").as_deref() == Ok("1");
     // A headless SDL dummy window uses the same software renderer as fbdev.
     // This lets CI exercise the exact renderer without opening /dev/fb0.
     let software_renderer =
@@ -323,6 +327,17 @@ fn main() -> Result<(), String> {
                         continue;
                     }
                     let Some(key) = keycode else { continue };
+                    let key = if cardputer_navigation && matches!(mode, Mode::Desktop) {
+                        match key {
+                            Keycode::F => Keycode::Up,
+                            Keycode::X => Keycode::Down,
+                            Keycode::Z => Keycode::Left,
+                            Keycode::C => Keycode::Right,
+                            _ => key,
+                        }
+                    } else {
+                        key
+                    };
                     os.input_key(KeyInput::new(key, keymod));
 
                     // 共通: Ctrl+Q 終了、F11 フルスクリーン
