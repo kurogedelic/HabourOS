@@ -14,6 +14,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Test Icon Studio
+        run: node tools/test-icon-studio.cjs
+
       - name: Install system packages
         run: |
           sudo apt-get update
