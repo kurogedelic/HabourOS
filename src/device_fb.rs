@@ -293,6 +293,7 @@ pub struct Keyboard {
     shift: bool,
     ctrl: bool,
     alt: bool,
+    fn_pressed: bool,
 }
 
 impl Keyboard {
@@ -308,6 +309,7 @@ impl Keyboard {
             shift: false,
             ctrl: false,
             alt: false,
+            fn_pressed: false,
         })
     }
 
@@ -338,22 +340,35 @@ impl Keyboard {
                 42 | 54 => self.shift = value != 0,
                 29 | 97 => self.ctrl = value != 0,
                 56 | 100 => self.alt = value != 0,
+                464 => {
+                    // Linux KEY_FN: Cardputer's Fn+F/X/Z/C is navigation,
+                    // including in editors where the bare letters must type.
+                    self.fn_pressed = value != 0;
+                    continue;
+                }
                 _ => {}
             }
-            let Some(key) = map_key(code) else { continue };
+
+            let direction = if self.fn_pressed { fn_arrow(code) } else { None };
+            let key = direction.or_else(|| map_key(code));
             let keymod = self.modifiers();
             let down = value != 0;
             if down {
-                events.push(Event::KeyDown {
-                    timestamp: 0,
-                    window_id: 0,
-                    keycode: Some(key),
-                    scancode: None,
-                    keymod,
-                    repeat: value == 2,
-                });
-                if value == 1 && !self.ctrl && !self.alt {
-                    if let Some(c) = printable(code, self.shift) {
+                if let Some(key) = key {
+                    events.push(Event::KeyDown {
+                        timestamp: 0,
+                        window_id: 0,
+                        keycode: Some(key),
+                        scancode: None,
+                        keymod,
+                        repeat: value == 2,
+                    });
+                }
+                // TextInput is independent of KeyDown: the Cardputer keyboard
+                // uses additional evdev keycodes (>68) for punctuation that
+                // have no SDL equivalent. Repeats should type repeatedly.
+                if !self.ctrl && !self.alt && direction.is_none() {
+                    if let Some(c) = cardputer_symbol(code).or_else(|| printable(code, self.shift)) {
                         events.push(Event::TextInput {
                             timestamp: 0,
                             window_id: 0,
@@ -361,7 +376,7 @@ impl Keyboard {
                         });
                     }
                 }
-            } else {
+            } else if let Some(key) = key {
                 events.push(Event::KeyUp {
                     timestamp: 0,
                     window_id: 0,
@@ -387,6 +402,314 @@ impl Keyboard {
             mods |= Mod::LALTMOD;
         }
         mods
+    }
+}
+
+// Cardputer Zero's TCA8418 keymap is not a standard PC keyboard.
+// This is the default table from the M5 APPLaunch keyboard layer. In
+// particular, codes 26/27/39/etc. are *direct punctuation keys*, not
+// the corresponding US keyboard keycap positions.
+// https://github.com/CardputerZero/launcher
+fn cardputer_symbol(code: u16) -> Option<char> {
+    Some(match code {
+        26 => '!',
+        27 => '@',
+        39 => '#',
+        40 => '
+    Some(match code {
+        1 => Keycode::Escape,
+        2 => Keycode::Num1,
+        3 => Keycode::Num2,
+        4 => Keycode::Num3,
+        5 => Keycode::Num4,
+        6 => Keycode::Num5,
+        7 => Keycode::Num6,
+        8 => Keycode::Num7,
+        9 => Keycode::Num8,
+        10 => Keycode::Num9,
+        11 => Keycode::Num0,
+        12 => Keycode::Minus,
+        13 => Keycode::Equals,
+        14 => Keycode::Backspace,
+        15 => Keycode::Tab,
+        16 => Keycode::Q,
+        17 => Keycode::W,
+        18 => Keycode::E,
+        19 => Keycode::R,
+        20 => Keycode::T,
+        21 => Keycode::Y,
+        22 => Keycode::U,
+        23 => Keycode::I,
+        24 => Keycode::O,
+        25 => Keycode::P,
+        26 => Keycode::LeftBracket,
+        27 => Keycode::RightBracket,
+        28 | 96 => Keycode::Return,
+        29 => Keycode::LCtrl,
+        30 => Keycode::A,
+        31 => Keycode::S,
+        32 => Keycode::D,
+        33 => Keycode::F,
+        34 => Keycode::G,
+        35 => Keycode::H,
+        36 => Keycode::J,
+        37 => Keycode::K,
+        38 => Keycode::L,
+        39 => Keycode::Semicolon,
+        40 => Keycode::Quote,
+        41 => Keycode::Backquote,
+        42 => Keycode::LShift,
+        43 => Keycode::Backslash,
+        44 => Keycode::Z,
+        45 => Keycode::X,
+        46 => Keycode::C,
+        47 => Keycode::V,
+        48 => Keycode::B,
+        49 => Keycode::N,
+        50 => Keycode::M,
+        51 => Keycode::Comma,
+        52 => Keycode::Period,
+        53 => Keycode::Slash,
+        54 => Keycode::RShift,
+        56 => Keycode::LAlt,
+        57 => Keycode::Space,
+        59 => Keycode::F1,
+        60 => Keycode::F2,
+        61 => Keycode::F3,
+        62 => Keycode::F4,
+        63 => Keycode::F5,
+        64 => Keycode::F6,
+        65 => Keycode::F7,
+        66 => Keycode::F8,
+        67 => Keycode::F9,
+        68 => Keycode::F10,
+        87 => Keycode::F11,
+        88 => Keycode::F12,
+        97 => Keycode::RCtrl,
+        100 => Keycode::RAlt,
+        102 => Keycode::Home,
+        103 => Keycode::Up,
+        104 => Keycode::PageUp,
+        105 => Keycode::Left,
+        106 => Keycode::Right,
+        107 => Keycode::End,
+        108 => Keycode::Down,
+        109 => Keycode::PageDown,
+        110 => Keycode::Insert,
+        111 => Keycode::Delete,
+        _ => return None,
+    })
+}
+
+fn printable(code: u16, shift: bool) -> Option<char> {
+    let letter = match code {
+        16..=25 => Some("qwertyuiop".as_bytes()[(code - 16) as usize] as char),
+        30..=38 => Some("asdfghjkl".as_bytes()[(code - 30) as usize] as char),
+        44..=50 => Some("zxcvbnm".as_bytes()[(code - 44) as usize] as char),
+        _ => None,
+    };
+    if let Some(c) = letter {
+        return Some(if shift { c.to_ascii_uppercase() } else { c });
+    }
+    match (code, shift) {
+        (2..=11, false) => Some("1234567890".as_bytes()[(code - 2) as usize] as char),
+        (2..=11, true) => Some("!@#$%^&*()".as_bytes()[(code - 2) as usize] as char),
+        (12, false) => Some('-'),
+        (12, true) => Some('_'),
+        (13, false) => Some('='),
+        (13, true) => Some('+'),
+        (26, false) => Some('['),
+        (26, true) => Some('{'),
+        (27, false) => Some(']'),
+        (27, true) => Some('}'),
+        (39, false) => Some(';'),
+        (39, true) => Some(':'),
+        (40, false) => Some('\''),
+        (40, true) => Some('"'),
+        (41, false) => Some('`'),
+        (41, true) => Some('~'),
+        (43, false) => Some('\\'),
+        (43, true) => Some('|'),
+        (51, false) => Some(','),
+        (51, true) => Some('<'),
+        (52, false) => Some('.'),
+        (52, true) => Some('>'),
+        (53, false) => Some('/'),
+        (53, true) => Some('?'),
+        (57, _) => Some(' '),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rgb565_pack() {
+        assert_eq!(
+            pack_channel(
+                255,
+                Bitfield {
+                    offset: 11,
+                    length: 5,
+                    msb_right: 0
+                }
+            ),
+            0xf800
+        );
+        assert_eq!(
+            pack_channel(
+                255,
+                Bitfield {
+                    offset: 5,
+                    length: 6,
+                    msb_right: 0
+                }
+            ),
+            0x07e0
+        );
+    }
+
+    #[test]
+    fn framebuffer_rgb565_conversion() {
+        let mut v = VarScreeninfo {
+            xres: 2,
+            yres: 1,
+            xres_virtual: 2,
+            yres_virtual: 1,
+            bits_per_pixel: 16,
+            red: Bitfield {
+                offset: 11,
+                length: 5,
+                ..Default::default()
+            },
+            green: Bitfield {
+                offset: 5,
+                length: 6,
+                ..Default::default()
+            },
+            blue: Bitfield {
+                offset: 0,
+                length: 5,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let fix = FixScreeninfo {
+            visual: FB_VISUAL_TRUECOLOR,
+            ..Default::default()
+        };
+        assert!(valid_rgb_format(&v, &fix));
+        let mut pixels = [0_u8; 4];
+        encode_rgb24_row(&[255, 0, 0, 0, 0, 255], &mut pixels, 2, &v).unwrap();
+        assert_eq!(pixels, [0x00, 0xf8, 0x1f, 0x00]);
+        // Reject overlapping channels, which would otherwise corrupt colors.
+        v.green.offset = 11;
+        assert!(!valid_rgb_format(&v, &fix));
+    }
+
+    #[test]
+    fn framebuffer_bgra8888_conversion() {
+        let v = VarScreeninfo {
+            bits_per_pixel: 32,
+            red: Bitfield {
+                offset: 16,
+                length: 8,
+                ..Default::default()
+            },
+            green: Bitfield {
+                offset: 8,
+                length: 8,
+                ..Default::default()
+            },
+            blue: Bitfield {
+                offset: 0,
+                length: 8,
+                ..Default::default()
+            },
+            transp: Bitfield {
+                offset: 24,
+                length: 8,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let fix = FixScreeninfo {
+            visual: FB_VISUAL_TRUECOLOR,
+            ..Default::default()
+        };
+        assert!(valid_rgb_format(&v, &fix));
+        let mut pixels = [0_u8; 4];
+        encode_rgb24_row(&[0x12, 0x34, 0x56], &mut pixels, 4, &v).unwrap();
+        assert_eq!(pixels, [0x56, 0x34, 0x12, 0xff]);
+        assert!(encode_rgb24_row(&[1, 2], &mut pixels, 4, &v).is_err());
+    }
+
+    #[test]
+    fn cardputer_custom_symbols_and_fn_navigation() {
+        // The hardware keymap uses physical keycodes different from
+        // regular US evdev punctuation. Include those beyond normal SDL keys.
+        assert_eq!(cardputer_symbol(26), Some('!'));
+        assert_eq!(cardputer_symbol(39), Some('#'));
+        assert_eq!(cardputer_symbol(69), Some('`'));
+        assert_eq!(cardputer_symbol(94), Some(')'));
+        assert_eq!(cardputer_symbol(73), Some('='));
+        assert_eq!(cardputer_symbol(30), None);
+        assert_eq!(fn_arrow(33), Some(Keycode::Up));
+        assert_eq!(fn_arrow(44), Some(Keycode::Left));
+        assert_eq!(fn_arrow(46), Some(Keycode::Right));
+        assert_eq!(fn_arrow(30), None);
+    }
+
+    #[test]
+    fn evdev_ascii() {
+        assert_eq!(printable(30, false), Some('a'));
+        assert_eq!(printable(30, true), Some('A'));
+        assert_eq!(printable(2, true), Some('!'));
+        assert_eq!(printable(57, false), Some(' '));
+    }
+}
+,
+        41 => '%',
+        43 => '^',
+        51 => '&',
+        52 => '*',
+        53 => '(',
+        94 => ')',
+        55 => '~',
+        69 => '`',
+        70 => '_',
+        71 => '-',
+        72 => '+',
+        73 => '=',
+        74 => '[',
+        75 => ']',
+        76 => '{',
+        77 => '}',
+        79 => ';',
+        80 => ':',
+        81 => '\'',
+        82 => '"',
+        83 => '<',
+        85 => '>',
+        86 => '\\',
+        89 => '|',
+        90 => ',',
+        91 => '.',
+        92 => '/',
+        93 => '?',
+        _ => return None,
+    })
+}
+
+fn fn_arrow(code: u16) -> Option<Keycode> {
+    match code {
+        33 => Some(Keycode::Up),    // F
+        45 => Some(Keycode::Down),  // X
+        44 => Some(Keycode::Left),  // Z
+        46 => Some(Keycode::Right), // C
+        _ => None,
     }
 }
 
