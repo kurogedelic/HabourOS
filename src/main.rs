@@ -171,6 +171,15 @@ fn main() -> Result<(), String> {
     let mut pointer_keys = false;
     let mut pointer_visible = false;
 
+    // CI smoke run: exercise actual SDL initialization and the complete
+    // 320x170 drawing loop in a headless dummy window without a device.
+    // Does not affect interactive runs unless explicitly requested.
+    let smoke_frames = std::env::var("HARBOUR_SMOKE_FRAMES")
+        .ok()
+        .and_then(|v| v.parse::<u32>().ok())
+        .filter(|&v| v > 0);
+    let mut rendered_frames = 0_u32;
+
     let mut events = sdl.event_pump()?;
     let mouse = events.mouse_state();
     os.input_pointer(PointerInput::move_to(mouse.x(), mouse.y(), 0, 0));
@@ -891,6 +900,10 @@ fn main() -> Result<(), String> {
             fb.present(&canvas)?;
         }
         canvas.present();
+        rendered_frames = rendered_frames.saturating_add(1);
+        if smoke_frames.is_some_and(|count| rendered_frames >= count) {
+            break 'main;
+        }
         sdl.mouse().show_cursor(false);
         frame_wait();
     }
