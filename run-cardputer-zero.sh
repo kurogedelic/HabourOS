@@ -51,7 +51,9 @@ if [[ "$SDL_VIDEODRIVER" == "dummy" ]]; then
     exit 1
   fi
   if [[ ! -r "$HARBOUR_INPUT_DEVICE" ]]; then
-    echo "Warning: keyboard unavailable: $HARBOUR_INPUT_DEVICE" >&2
+    echo "Keyboard missing or unreadable: $HARBOUR_INPUT_DEVICE" >&2
+    echo "Check /dev/input/by-path or pass HARBOUR_INPUT_DEVICE explicitly." >&2
+    exit 1
   fi
 fi
 
