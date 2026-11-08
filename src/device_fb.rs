@@ -135,14 +135,7 @@ impl Framebuffer {
                 var.xres, var.yres
             ));
         }
-        if !matches!(var.bits_per_pixel, 16 | 24 | 32)
-            || fix.visual != FB_VISUAL_TRUECOLOR
-            || var.grayscale != 0
-            || var.nonstd != 0
-            || [var.red, var.green, var.blue, var.transp].iter().any(|f| {
-                f.msb_right != 0 || f.length > 8 || f.offset + f.length > var.bits_per_pixel
-            })
-        {
+        if !valid_rgb_format(&var, &fix) {
             return Err(format!(
                 "unsupported framebuffer format: {} bpp, visual {}, RGB offsets ({},{},{})",
                 var.bits_per_pixel, fix.visual, var.red.offset, var.green.offset, var.blue.offset
@@ -150,11 +143,18 @@ impl Framebuffer {
         }
         let bytes_per_pixel = (var.bits_per_pixel / 8) as usize;
         let stride = fix.line_length as usize;
-        let row_end = (var.xoffset as usize + width as usize) * bytes_per_pixel;
+        let row_end = (var.xoffset as usize + width as usize)
+            .checked_mul(bytes_per_pixel)
+            .ok_or("framebuffer horizontal offset overflow")?;
         let last_byte = (var.yoffset as usize + height as usize - 1)
-            .saturating_mul(stride)
-            .saturating_add(row_end);
-        if row_end > stride || last_byte > fix.smem_len as usize {
+            .checked_mul(stride)
+            .and_then(|v| v.checked_add(row_end))
+            .ok_or("framebuffer vertical offset overflow")?;
+        if var.xres_virtual < var.xoffset.saturating_add(width)
+            || var.yres_virtual < var.yoffset.saturating_add(height)
+            || row_end > stride
+            || last_byte > fix.smem_len as usize
+        {
             return Err(format!(
                 "{path}: framebuffer stride or memory size is too small"
             ));
@@ -179,20 +179,21 @@ impl Framebuffer {
             .map_err(|e| format!("SDL read_pixels: {e}"))?;
         let width = self.var.xres as usize;
         let height = self.var.yres as usize;
-        if pixels.len() < width * height * 3 {
-            return Err("SDL returned a short RGB24 frame".to_string());
+        if pixels.len() != width * height * 3 {
+            return Err(format!(
+                "SDL returned {} RGB24 bytes, expected {}",
+                pixels.len(),
+                width * height * 3
+            ));
         }
         for y in 0..height {
-            for x in 0..width {
-                let src = (y * width + x) * 3;
-                let pixel = pack_channel(pixels[src], self.var.red)
-                    | pack_channel(pixels[src + 1], self.var.green)
-                    | pack_channel(pixels[src + 2], self.var.blue)
-                    | opaque_bits(self.var.transp);
-                let dest = x * self.bytes_per_pixel;
-                self.row[dest..dest + self.bytes_per_pixel]
-                    .copy_from_slice(&pixel.to_ne_bytes()[..self.bytes_per_pixel]);
-            }
+            let start = y * width * 3;
+            encode_rgb24_row(
+                &pixels[start..start + width * 3],
+                &mut self.row,
+                self.bytes_per_pixel,
+                &self.var,
+            )?;
             let offset = ((y + self.var.yoffset as usize) * self.fix.line_length as usize
                 + self.var.xoffset as usize * self.bytes_per_pixel) as u64;
             let mut written = 0;
@@ -210,6 +211,59 @@ impl Framebuffer {
         }
         Ok(())
     }
+}
+
+// Linux fbdev publishes bit positions rather than a fixed RGB565/BGR888
+// encoding. Reject unusual or overlapping formats instead of writing garbage.
+fn valid_rgb_format(var: &VarScreeninfo, fix: &FixScreeninfo) -> bool {
+    if !matches!(var.bits_per_pixel, 16 | 24 | 32)
+        || fix.visual != FB_VISUAL_TRUECOLOR
+        || var.grayscale != 0
+        || var.nonstd != 0
+        || [var.red, var.green, var.blue].iter().any(|f| f.length == 0)
+    {
+        return false;
+    }
+    let mut occupied = 0_u32;
+    for field in [var.red, var.green, var.blue, var.transp] {
+        if field.msb_right != 0
+            || field.length > 8
+            || field.offset + field.length > var.bits_per_pixel
+        {
+            return false;
+        }
+        let mask = if field.length == 0 {
+            0
+        } else {
+            ((1_u32 << field.length) - 1) << field.offset
+        };
+        if occupied & mask != 0 {
+            return false;
+        }
+        occupied |= mask;
+    }
+    true
+}
+
+// Same RGB24 source layout is used by the desktop SDL simulator and the
+// hardware's fbdev sink. This pure conversion is exercised in CI.
+fn encode_rgb24_row(
+    src: &[u8],
+    dest: &mut [u8],
+    bytes_per_pixel: usize,
+    var: &VarScreeninfo,
+) -> Result<(), String> {
+    if src.len() % 3 != 0 || dest.len() != src.len() / 3 * bytes_per_pixel {
+        return Err("invalid RGB24 source or framebuffer row length".to_string());
+    }
+    for (rgb, native) in src.chunks_exact(3).zip(dest.chunks_exact_mut(bytes_per_pixel)) {
+        let packed = pack_channel(rgb[0], var.red)
+            | pack_channel(rgb[1], var.green)
+            | pack_channel(rgb[2], var.blue)
+            | opaque_bits(var.transp);
+        native.copy_from_slice(&packed.to_ne_bytes()[..bytes_per_pixel]);
+    }
+    Ok(())
 }
 
 fn pack_channel(value: u8, field: Bitfield) -> u32 {
@@ -487,6 +541,47 @@ mod tests {
             ),
             0x07e0
         );
+    }
+
+    #[test]
+    fn framebuffer_rgb565_conversion() {
+        let mut v = VarScreeninfo {
+            xres: 2,
+            yres: 1,
+            xres_virtual: 2,
+            yres_virtual: 1,
+            bits_per_pixel: 16,
+            red: Bitfield { offset: 11, length: 5, ..Default::default() },
+            green: Bitfield { offset: 5, length: 6, ..Default::default() },
+            blue: Bitfield { offset: 0, length: 5, ..Default::default() },
+            ..Default::default()
+        };
+        let fix = FixScreeninfo { visual: FB_VISUAL_TRUECOLOR, ..Default::default() };
+        assert!(valid_rgb_format(&v, &fix));
+        let mut pixels = [0_u8; 4];
+        encode_rgb24_row(&[255, 0, 0, 0, 0, 255], &mut pixels, 2, &v).unwrap();
+        assert_eq!(pixels, [0x00, 0xf8, 0x1f, 0x00]);
+        // Reject overlapping channels, which would otherwise corrupt colors.
+        v.green.offset = 11;
+        assert!(!valid_rgb_format(&v, &fix));
+    }
+
+    #[test]
+    fn framebuffer_bgra8888_conversion() {
+        let v = VarScreeninfo {
+            bits_per_pixel: 32,
+            red: Bitfield { offset: 16, length: 8, ..Default::default() },
+            green: Bitfield { offset: 8, length: 8, ..Default::default() },
+            blue: Bitfield { offset: 0, length: 8, ..Default::default() },
+            transp: Bitfield { offset: 24, length: 8, ..Default::default() },
+            ..Default::default()
+        };
+        let fix = FixScreeninfo { visual: FB_VISUAL_TRUECOLOR, ..Default::default() };
+        assert!(valid_rgb_format(&v, &fix));
+        let mut pixels = [0_u8; 4];
+        encode_rgb24_row(&[0x12, 0x34, 0x56], &mut pixels, 4, &v).unwrap();
+        assert_eq!(pixels, [0x56, 0x34, 0x12, 0xff]);
+        assert!(encode_rgb24_row(&[1, 2], &mut pixels, 4, &v).is_err());
     }
 
     #[test]
