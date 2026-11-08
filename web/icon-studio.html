@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#FFE8B8">
+<meta name="theme-color" content="#ffffff">
 <title>Harbour Icons</title>
 <style>
-:root{color-scheme:light;--ink:#382209;--mid:#b8945c;--desktop:#f0d6a0;--paper:#ffe8b8;--line:rgba(56,34,9,.30);--wash:rgba(56,34,9,.055);--active:rgba(56,34,9,.11)}
+:root{color-scheme:light;--ink:#242724;--mid:#a4aaa5;--desktop:#f5f6f4;--paper:#ffffff;--line:#daddd9;--wash:#f5f6f4;--active:#e9ede9}
 *{box-sizing:border-box}
 html,body{min-height:100%;margin:0}
 body{background:var(--desktop);color:var(--ink);font:14px/1.35 system-ui,-apple-system,"Hiragino Kaku Gothic ProN",sans-serif}
@@ -30,13 +30,13 @@ svg{display:block;width:19px;height:19px;fill:none;stroke:currentColor;stroke-wi
 .library-head strong{font-weight:700;font-size:17px;letter-spacing:-.025em}
 .sub,.index-info{font-size:12px;opacity:.7;font-variant-numeric:tabular-nums}
 .search-wrap{padding:0 12px 10px}
-#search{width:100%;height:37px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.28);outline-offset:1px}
+#search{width:100%;height:37px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--paper);outline-offset:1px}
 #search::placeholder{color:var(--ink);opacity:.5}
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;overflow:auto;padding:7px 9px 18px;align-content:start;-webkit-overflow-scrolling:touch}
 .tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:77px;padding:7px 2px;border:1px solid transparent;background:var(--wash);border-radius:6px;color:var(--ink)}
 .tile:hover{border-color:var(--mid)}
 .tile[aria-pressed="true"]{border:1px solid var(--ink);background:var(--active)}
-.tile canvas{width:40px;height:40px;image-rendering:pixelated;image-rendering:crisp-edges;background-color:var(--paper);background-image:linear-gradient(45deg,var(--desktop) 25%,transparent 25%),linear-gradient(-45deg,var(--desktop) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--desktop) 75%),linear-gradient(-45deg,transparent 75%,var(--desktop) 75%);background-size:10px 10px;background-position:0 0,0 5px,5px -5px,-5px 0}
+.tile canvas{width:40px;height:40px;image-rendering:pixelated;image-rendering:crisp-edges;background-color:var(--paper);background-image:linear-gradient(45deg,#e8ebe8 25%,transparent 25%),linear-gradient(-45deg,#e8ebe8 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e8ebe8 75%),linear-gradient(-45deg,transparent 75%,#e8ebe8 75%);background-size:10px 10px;background-position:0 0,0 5px,5px -5px,-5px 0}
 .tile .number{font-size:10px;opacity:.6;font-variant-numeric:tabular-nums}
 .tile .filename{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .editor{padding:18px}
@@ -46,9 +46,9 @@ svg{display:block;width:19px;height:19px;fill:none;stroke:currentColor;stroke-wi
 .namegroup{flex:1;min-width:0}.index-info{white-space:nowrap}
 .workspace{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;justify-content:center;padding:20px 2px 2px}
 .stage{flex:1 1 360px;max-width:min(520px,62vh);min-width:260px}
-.artboard{position:relative;width:100%;aspect-ratio:1;border:1px solid var(--mid);border-radius:3px;overflow:hidden;background-color:var(--paper);background-image:linear-gradient(45deg,var(--desktop) 25%,transparent 25%),linear-gradient(-45deg,var(--desktop) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,var(--desktop) 75%),linear-gradient(-45deg,transparent 75%,var(--desktop) 75%);background-size:22px 22px;background-position:0 0,0 11px,11px -11px,-11px 0;touch-action:none}
+.artboard{position:relative;width:100%;aspect-ratio:1;border:1px solid var(--mid);border-radius:3px;overflow:hidden;background-color:var(--paper);background-image:linear-gradient(45deg,#e8ebe8 25%,transparent 25%),linear-gradient(-45deg,#e8ebe8 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e8ebe8 75%),linear-gradient(-45deg,transparent 75%,#e8ebe8 75%);background-size:22px 22px;background-position:0 0,0 11px,11px -11px,-11px 0;touch-action:none}
 #canvas{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;cursor:crosshair}
-.artboard.grid-on::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(56,34,9,.17) 1px,transparent 1px),linear-gradient(to bottom,rgba(56,34,9,.17) 1px,transparent 1px);background-size:calc(100% / 24) calc(100% / 24);background-position:-1px -1px}
+.artboard.grid-on::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,rgba(52,59,54,.12) 1px,transparent 1px),linear-gradient(to bottom,rgba(56,34,9,.17) 1px,transparent 1px);background-size:calc(100% / 24) calc(100% / 24);background-position:-1px -1px}
 .stage-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;font-size:11px;opacity:.7}
 .checkbox-row{display:inline-flex;align-items:center;gap:7px;min-height:33px;cursor:pointer;font-size:12px}
 .checkbox-row input{width:17px;height:17px;accent-color:var(--ink)}
